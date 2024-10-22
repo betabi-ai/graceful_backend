@@ -1,0 +1,20 @@
+FROM python:3.11-bullseye
+
+WORKDIR /app
+
+COPY google-chrome-stable_current_amd64.deb .
+COPY chromedriver /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/chromedriver
+
+RUN dpkg -i google-chrome-stable_current_amd64.deb || apt-get -f install -y
+
+
+
+COPY ./scrapyd.conf /etc/scrapyd/scrapyd.conf
+COPY ./scrapyd_requirements.txt ./requirements.txt
+EXPOSE 6800  
+RUN pip install --upgrade pip
+RUN pip install scrapyd
+RUN pip install --no-cache-dir -r requirements.txt
+CMD ["scrapyd"]

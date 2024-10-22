@@ -1,0 +1,35 @@
+FROM python:3.11-slim
+
+# 安装构建所需的依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  gcc \
+  g++ \
+  libpq-dev \
+  libssl-dev \
+  libffi-dev \
+  build-essential \
+  wget \
+  unzip \
+  && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+  && apt-get install -y ./google-chrome-stable_current_amd64.deb \
+  && rm -rf /var/lib/apt/lists/*
+
+# 安装 ChromeDriver
+RUN apt-get install -y \
+  curl \
+  && CHROMEDRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE` \
+  && wget -N https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip \
+  && unzip chromedriver_linux64.zip \
+  && mv chromedriver /usr/local/bin/ \
+  && chmod +x /usr/local/bin/chromedriver \
+  && rm chromedriver_linux64.zip
+
+
+WORKDIR /app
+COPY ./scrapyd.conf /etc/scrapyd/scrapyd.conf
+COPY ./scrapyd_requirements.txt ./requirements.txt
+EXPOSE 6800  
+RUN pip install --upgrade pip
+RUN pip install scrapyd
+RUN pip install --no-cache-dir -r requirements.txt
+CMD ["scrapyd"]

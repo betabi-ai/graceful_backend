@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  app2: # 开发环境，使代码能及时反正出来。
+      build: .
+      volumes:
+        - .:/app
+      # expose:
+      #   - "8000"
+      ports:
+        - "8000:8000"
+      command: python manage.py runserver 0.0.0.0:8000  # 启动 Django 开发服务器  # Gunicorn 端口
+  # app:
+  #   build: .
+  #   volumes:
+  #     - .:/app
+  #   expose:
+  #     - "8000"    # Gunicorn 端口
+
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./statics:/app/statics  # 确保 Nginx 可以访问静态文件
+    ports:
+      - "8001:8001"
+    depends_on:
+      - app
+  scrapyd:
+    build:
+      context: .
+      dockerfile: ./ScrapydDockerfile  # 指向你的 Dockerfile
+    volumes:
+      - ./scrapyd.conf:/etc/scrapyd/scrapyd.conf  # 使配置文件可用
+    ports:
+      - "6800:6800"  # 映射 Scrapyd 的端口
+    environment:
+      - REDIS_URL=redis://redis:6379/0   # 指向 Redis
+    depends_on:
+      - redis  # 确保在 Redis 启动后启动 Scrapyd
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    command: celery -A gracefulmanagentsystem worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+  celery-beat:
+    build: .
+    command: celery -A gracefulmanagentsystem beat --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis

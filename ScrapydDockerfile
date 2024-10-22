@@ -1,0 +1,23 @@
+FROM python:3.11-bullseye
+
+
+# 安装必要的系统依赖，包括 Chromium 和 ChromeDriver
+# 使用的是Chromium 
+RUN apt-get update && apt-get install -y \
+  wget \
+  unzip \
+  gnupg \
+  chromium \
+  chromium-driver \
+  && apt-get clean
+
+WORKDIR /app
+
+
+COPY ./scrapyd.conf /etc/scrapyd/scrapyd.conf
+COPY ./scrapyd_requirements.txt ./requirements.txt
+EXPOSE 6800  
+RUN pip install --upgrade pip
+RUN pip install scrapyd
+RUN pip install --no-cache-dir -r requirements.txt
+CMD ["scrapyd"]
