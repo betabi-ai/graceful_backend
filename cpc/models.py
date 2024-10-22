@@ -50,6 +50,9 @@ class CpcGoodKeywords(models.Model):
     created_at = models.DateTimeField(_l("创建时间"), blank=True, null=True)  # 创建时间
     updated_at = models.DateTimeField(_l("更新时间"), blank=True, null=True)  # 更新时间
 
+    def __str__(self):
+        return self.keyword
+
     class Meta:
         managed = False  # 指示Django不管理该表的生命周期
         db_table = "cpc_good_keywords"  # 数据库表名
