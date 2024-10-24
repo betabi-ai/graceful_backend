@@ -5,7 +5,7 @@ from cpc.models import CpcGoodKeywords
 
 class CpcGoodKeywordsAdmin(admin.ModelAdmin):
     list_display = (
-        "itemid",
+        # "itemid",
         "keyword",
         "itemmngid",
         "cpc",

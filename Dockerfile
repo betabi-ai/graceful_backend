@@ -32,4 +32,4 @@ RUN  chmod -R 755 /app/statics
 # EXPOSE 9001
 
 # 使用 Gunicorn 来运行 Django 项目
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "gracefulmanagentsystem.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "graceful_backend.wsgi:application"]

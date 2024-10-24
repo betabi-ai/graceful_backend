@@ -15,7 +15,7 @@ class CpcGoodKeywords(models.Model):
         _l("最大CPC"),
     )  # 最大CPC值
     recommendationcpc = models.IntegerField(
-        _l("推荐CPC"),
+        _l("目安CPC"),
     )  # 推荐CPC值
     weightvalue = models.IntegerField(
         _l("权重值"),

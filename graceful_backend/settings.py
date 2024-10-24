@@ -1,5 +1,8 @@
 from datetime import timedelta
+import os
 from pathlib import Path
+
+# from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -10,17 +13,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-v6o(p*%9@a=q$w^###@7kbc32mi=44e-hw2w6v=)o&gn2_1v+8"
+# SECRET_KEY = config("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
+# DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = ["*"]
+
+# CSRF_TRUSTED_ORIGINS = []
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8001",  # 添加开发服务器地址
     "http://127.0.0.1:8001",
+    "http://160.16.234.163:8035",
+    "https://160.16.234.163:8035",
     # 'https://your-domain.com',  # 生产环境时添加的域名
 ]
+
+# ENV_CSRF_TRUSTED_ORIGINS = config("DJANGO_CSRF_TRUSTED_ORIGINS", cast=str, default="")
+
+# for origin in ENV_CSRF_TRUSTED_ORIGINS.split(","):
+#     CSRF_TRUSTED_ORIGINS.append(f"{origin}".strip().lower())
 
 # Application definition
 
@@ -136,7 +150,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "statics/"
+
+# # 静态文件存放的目录
+STATIC_ROOT = os.path.join(BASE_DIR, "statics")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -145,14 +162,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # scrapyd 配置
+#
+
 # SCRAPYD_URL = "http://localhost:6800"
-SCRAPYD_URL = "http://scrapyd:6800"  # 因为使用了 Docker Compose，所以这里使用服务名
+SCRAPYD_URL = "http://160.16.234.163:6800"
+
 # SCRAPYD_URL = os.getenv("SCRAPYD_URL", "http://localhost:6800")  # 从环境变量中获取 Scrapyd 的地址
 
 
 # Celery 配置
-CELERY_BROKER_URL = "redis://redis:6379/0"  # Redis 作为 Broker
-CELERY_RESULT_BACKEND = "redis://redis:6379/1"  # 使用 Redis 存储任务结果
+CELERY_BROKER_URL = "redis://160.16.234.163:6379/0"  # Redis 作为 Broker
+CELERY_RESULT_BACKEND = "redis://160.16.234.163:6379/1"  # 使用 Redis 存储任务结果
 
 CELERY_ACCEPT_CONTENT = ["json"]  # 指定接受的内容类型
 CELERY_TASK_SERIALIZER = "json"  # 指定任务序列化方式
