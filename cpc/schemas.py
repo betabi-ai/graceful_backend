@@ -2,6 +2,22 @@ from datetime import datetime
 from ninja import Schema
 
 
+class UserSchema(Schema):
+    username: str
+    is_authenticated: bool
+    email: str = None
+    date_joined: datetime = None
+
+
+class CpcProductsSchema(Schema):
+    itemid: int
+    itemmngid: str
+    itemname: str
+    itemprice: int
+    itemurl: str
+    itemimageurl: str
+
+
 class CpcGoodKeywordsSchema(Schema):
     id: int
     keyword: str
