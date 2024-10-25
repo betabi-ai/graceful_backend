@@ -134,3 +134,30 @@ class ShopGood(models.Model):
         managed = False  # 指示Django不管理该表的生命周期
         db_table = "shop_good"  # 数据库表名
         unique_together = (("shopid", "itemid"),)  # shopid和itemid的唯一约束
+
+
+class TopKeywords(models.Model):
+    shopid = models.CharField(max_length=20)
+    itemid = models.CharField(max_length=20)
+    search_word = models.CharField(max_length=200)
+    itemmngid = models.CharField(max_length=32)
+    ldate = models.DateTimeField(blank=True, null=True)
+    item_rank = models.IntegerField()
+    item_visit = models.IntegerField()
+    item_visit_all = models.IntegerField()
+    item_order_count_all = models.IntegerField()
+    search_word_order_count = models.IntegerField()
+    item_cvr_all = models.DecimalField(max_digits=10, decimal_places=2)
+    search_word_cvr = models.DecimalField(max_digits=10, decimal_places=2)
+    search_word_rank = models.IntegerField()
+    search_word_ichiba_rank = models.IntegerField()
+    search_word_visit = models.IntegerField()
+    search_word_ichiba_visit = models.IntegerField()
+    reg_date = models.DateTimeField(blank=True, null=True)
+    term_start_date = models.DateField(blank=True, null=True)
+    term_end_date = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "keyword_search_datas"
