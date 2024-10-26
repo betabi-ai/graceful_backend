@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from ninja import Schema
 
 
@@ -54,13 +54,13 @@ class TopKeywordsSchema(Schema):
     search_word_visit: int | None = None
     search_word_ichiba_visit: int | None = None
     reg_date: datetime | None = None
-    term_start_date: datetime | None = None
-    term_end_date: datetime | None = None
+    term_start_date: date | None = None
+    term_end_date: date | None = None
     created_at: datetime | None = None
 
     class Config:
         json_encoders = {
-            datetime: lambda v: v.strftime("%Y-%m-%d"),  # 只显示日期
+            date: lambda v: v.strftime("%Y-%m-%d"),
         }
 
 

@@ -84,7 +84,7 @@ def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
     tags=["top_five_keywords"],
     auth=JWTAuth(),
 )
-@paginate(PageNumberPagination)
+@paginate(PageNumberPagination, page_size=100)
 def get_top_keywords_by_shopid(request, shopid: int, dtype: int = 1, q: str = ""):
     """
     获取指定shopid的CPC关键词排行榜
@@ -95,6 +95,7 @@ def get_top_keywords_by_shopid(request, shopid: int, dtype: int = 1, q: str = ""
         query &= Q(search_word__icontains=q) | Q(itemmngid__icontains=q)
 
     qs = TopKeywords.objects.filter(query).order_by("-ldate")
+    # print("=============top keyword:\n", qs.query)
     return qs
 
 
