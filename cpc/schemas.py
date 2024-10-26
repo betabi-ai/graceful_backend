@@ -31,6 +31,9 @@ class CpcGoodKeywordsSchema(Schema):
     natural_rank: int
     natural_rank_updatedat: datetime | None = None
     updatedat: datetime = None
+    cpc_asc: int  # CPC竞价价格每次递增的值
+    cpc_desc: int  # CPC竞价价格每次递减的值
+    enabled_cpc: bool  # 是否启用CPC竞价
 
 
 class TopKeywordsSchema(Schema):
@@ -54,3 +57,17 @@ class TopKeywordsSchema(Schema):
     term_start_date: datetime | None = None
     term_end_date: datetime | None = None
     created_at: datetime | None = None
+
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.strftime("%Y-%m-%d"),  # 只显示日期
+        }
+
+
+class CpcKeywordEnableChangeINSchema(Schema):
+    """
+    用于更新CPC关键词的 enabled_cpc 字段
+    """
+
+    id: int  # CPC关键词ID
+    enabled_cpc: bool  # 是否启用CPC竞价

@@ -1,12 +1,17 @@
 from typing import List
-from ninja import Router
+from ninja import Router, Schema
 
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from ninja.pagination import paginate, PageNumberPagination
 
 from cpc.models import CpcGoodKeywords, CpcKeywordsGoods, TopKeywords
-from cpc.schemas import CpcGoodKeywordsSchema, CpcProductsSchema, TopKeywordsSchema
+from cpc.schemas import (
+    CpcGoodKeywordsSchema,
+    CpcKeywordEnableChangeINSchema,
+    CpcProductsSchema,
+    TopKeywordsSchema,
+)
 from helpers.custom_pagination import CustomPagination
 from ninja_jwt.authentication import JWTAuth
 
@@ -51,7 +56,7 @@ def get_cpc_keywords_by_shopid(request, shopid: int, q: str = ""):
     if q:
         query &= Q(keyword__icontains=q) | Q(itemmngid__icontains=q)
 
-    qs = CpcGoodKeywords.objects.filter(query).order_by("keyword")
+    qs = CpcGoodKeywords.objects.filter(query).order_by("-enabled_cpc", "itemmngid")
     # print(qs.query)
     return qs
 
@@ -69,7 +74,7 @@ def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
     """
     query = Q(shopid=shopid)
     query &= Q(itemmngid=itemmngid)
-    qs = CpcGoodKeywords.objects.filter(query).order_by("keyword")
+    qs = CpcGoodKeywords.objects.filter(query).order_by("-enabled_cpc", "keyword")
     return qs
 
 
@@ -91,3 +96,22 @@ def get_top_keywords_by_shopid(request, shopid: int, dtype: int = 1, q: str = ""
 
     qs = TopKeywords.objects.filter(query).order_by("-ldate")
     return qs
+
+
+@router.patch(
+    "/keywords/checkenable",
+    response=CpcGoodKeywordsSchema,
+    tags=["update_cpc_keywords"],
+    # auth=JWTAuth(),
+    auth=None,
+)
+def check_cpc_enabled(request, item: CpcKeywordEnableChangeINSchema):
+    """
+    更新指定id的CPC关键词的 enabled_cpc 字段
+    """
+    # print("....................", item.id, item.enabled_cpc)
+    obj = get_object_or_404(CpcGoodKeywords, id=item.id)
+    # print(obj)
+    obj.enabled_cpc = item.enabled_cpc
+    obj.save()
+    return obj
