@@ -41,17 +41,18 @@ def get_cpc_products(request, shopid: int, q: str = None):
 )
 @paginate(PageNumberPagination, page_size=50)
 # @paginate(CustomPagination)
-def get_cpc_keywords_by_shopid(request, shopid: int, q: str = None):
+def get_cpc_keywords_by_shopid(request, shopid: int, q: str = ""):
     """
     获取指定shopid的CPC关键词
     """
+    print(shopid, q)
     print(shopid)
     query = Q(shopid=shopid)
     if q:
-        query &= Q(keyword__icontains=q)
+        query &= Q(keyword__icontains=q) | Q(itemmngid__icontains=q)
 
     qs = CpcGoodKeywords.objects.filter(query).order_by("keyword")
-    print(qs.query)
+    # print(qs.query)
     return qs
 
 
@@ -79,9 +80,14 @@ def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
     auth=JWTAuth(),
 )
 @paginate(PageNumberPagination)
-def get_top_keywords_by_shopid(request, shopid: int):
+def get_top_keywords_by_shopid(request, shopid: int, dtype: int = 1, q: str = ""):
     """
     获取指定shopid的CPC关键词排行榜
     """
-    qs = TopKeywords.objects.filter(shopid=shopid).order_by("-ldate")
+    # print(shopid, dtype, q)
+    query = Q(shopid=shopid) & Q(date_type=dtype)
+    if q:
+        query &= Q(search_word__icontains=q) | Q(itemmngid__icontains=q)
+
+    qs = TopKeywords.objects.filter(query).order_by("-ldate")
     return qs

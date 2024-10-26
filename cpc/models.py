@@ -144,6 +144,7 @@ class TopKeywords(models.Model):
     ldate = models.DateTimeField(blank=True, null=True)
     item_rank = models.IntegerField()
     item_visit = models.IntegerField()
+    date_type = models.IntegerField()
     item_visit_all = models.IntegerField()
     item_order_count_all = models.IntegerField()
     search_word_order_count = models.IntegerField()
@@ -160,4 +161,4 @@ class TopKeywords(models.Model):
 
     class Meta:
         managed = False
-        db_table = "keyword_search_datas"
+        db_table = "top_keywords_datas"
