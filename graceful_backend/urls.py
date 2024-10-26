@@ -23,9 +23,14 @@ from ninja import NinjaAPI
 
 from ninja import UploadedFile, File
 
+from graceful_backend.views import CustomTokenObtainPairView
+
 from .api import api
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # path(
+    #     "token/abc/pair/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"
+    # ),
     path("api/", api.urls),
 ]
