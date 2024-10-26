@@ -1,27 +1,24 @@
 from datetime import timedelta
 import os
 from pathlib import Path
-
-# from decouple import config
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# 初始化 environ
+env = environ.Env()
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-v6o(p*%9@a=q$w^###@7kbc32mi=44e-hw2w6v=)o&gn2_1v+8"
-# SECRET_KEY = config("DJANGO_SECRET_KEY")
+print("env:=========", env("DB_NAME"))
+
+SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-# DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = ["*"]
-
-# CSRF_TRUSTED_ORIGINS = []
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8001",  # 添加开发服务器地址
@@ -31,10 +28,12 @@ CSRF_TRUSTED_ORIGINS = [
     # 'https://your-domain.com',  # 生产环境时添加的域名
 ]
 
-# ENV_CSRF_TRUSTED_ORIGINS = config("DJANGO_CSRF_TRUSTED_ORIGINS", cast=str, default="")
+ENV_CSRF_TRUSTED_ORIGINS = env("DJANGO_CSRF_TRUSTED_ORIGINS")
+CSRF_TRUSTED_ORIGINS = []
+for origin in ENV_CSRF_TRUSTED_ORIGINS.split(","):
+    CSRF_TRUSTED_ORIGINS.append(f"{origin}".strip().lower())
 
-# for origin in ENV_CSRF_TRUSTED_ORIGINS.split(","):
-#     CSRF_TRUSTED_ORIGINS.append(f"{origin}".strip().lower())
+print("CSRF_TRUSTED_ORIGINS: ", CSRF_TRUSTED_ORIGINS)
 
 # Application definition
 
@@ -92,30 +91,17 @@ TEMPLATES = [
 WSGI_APPLICATION = "graceful_backend.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "gracefulmanager",
-        "USER": "postgres",
-        "PASSWORD": "graceful@pg2024",
-        "HOST": "160.16.234.163",
-        "PORT": "5432",  # PostgreSQL 默认端口
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": env("DB_HOST"),
+        "PORT": env("DB_PORT"),
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -132,9 +118,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 # LANGUAGE_CODE = "en-us"
 LANGUAGE_CODE = "zh-hans"
@@ -162,17 +145,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # scrapyd 配置
-#
 
 # SCRAPYD_URL = "http://localhost:6800"
-SCRAPYD_URL = "http://160.16.234.163:6800"
-
-# SCRAPYD_URL = os.getenv("SCRAPYD_URL", "http://localhost:6800")  # 从环境变量中获取 Scrapyd 的地址
+SCRAPYD_URL = env("SCRAPYD_URL")
+print("SCRAPYD_URL: ", SCRAPYD_URL)
 
 
 # Celery 配置
-CELERY_BROKER_URL = "redis://160.16.234.163:6379/0"  # Redis 作为 Broker
-CELERY_RESULT_BACKEND = "redis://160.16.234.163:6379/1"  # 使用 Redis 存储任务结果
+CELERY_BROKER_URL = env("CELERY_BROKER_URL")  # Redis 作为 Broker
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")  # 使用 Redis 存储任务结果
 
 CELERY_ACCEPT_CONTENT = ["json"]  # 指定接受的内容类型
 CELERY_TASK_SERIALIZER = "json"  # 指定任务序列化方式
