@@ -16,7 +16,7 @@ print("env:=========", env("DB_NAME"))
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -27,13 +27,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://160.16.234.163:8035",
     # 'https://your-domain.com',  # 生产环境时添加的域名
 ]
-
-ENV_CSRF_TRUSTED_ORIGINS = env("DJANGO_CSRF_TRUSTED_ORIGINS")
-CSRF_TRUSTED_ORIGINS = []
-for origin in ENV_CSRF_TRUSTED_ORIGINS.split(","):
-    CSRF_TRUSTED_ORIGINS.append(f"{origin}".strip().lower())
-
-print("CSRF_TRUSTED_ORIGINS: ", CSRF_TRUSTED_ORIGINS)
 
 # Application definition
 
