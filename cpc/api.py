@@ -1,5 +1,5 @@
 from typing import List
-from ninja import Router, Schema
+from ninja import Router
 
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
@@ -12,10 +12,11 @@ from cpc.schemas import (
     CpcProductsSchema,
     TopKeywordsSchema,
 )
-from helpers.custom_pagination import CustomPagination
 from ninja_jwt.authentication import JWTAuth
 
 router = Router()
+
+_PAGE_SIZE = 30
 
 
 @router.get(
@@ -44,7 +45,7 @@ def get_cpc_products(request, shopid: int, q: str = None):
     tags=["cpc_keywords"],
     auth=JWTAuth(),
 )
-@paginate(PageNumberPagination, page_size=50)
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 # @paginate(CustomPagination)
 def get_cpc_keywords_by_shopid(request, shopid: int, q: str = ""):
     """
@@ -67,7 +68,7 @@ def get_cpc_keywords_by_shopid(request, shopid: int, q: str = ""):
     tags=["cpc_itemmngid_keywords"],
     auth=JWTAuth(),
 )
-@paginate(PageNumberPagination)
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
     """
     获取指定shopid下的指定itemmngid下的CPC关键词列表
@@ -84,7 +85,7 @@ def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
     tags=["top_five_keywords"],
     auth=JWTAuth(),
 )
-@paginate(PageNumberPagination, page_size=100)
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_top_keywords_by_shopid(request, shopid: int, dtype: int = 1, q: str = ""):
     """
     获取指定shopid的CPC关键词排行榜
@@ -106,13 +107,16 @@ def get_top_keywords_by_shopid(request, shopid: int, dtype: int = 1, q: str = ""
     # auth=JWTAuth(),
     auth=None,
 )
-def check_cpc_enabled(request, item: CpcKeywordEnableChangeINSchema):
+def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
     """
     更新指定id的CPC关键词的 enabled_cpc 字段
     """
     # print("....................", item.id, item.enabled_cpc)
     obj = get_object_or_404(CpcGoodKeywords, id=item.id)
-    # print(obj)
-    obj.enabled_cpc = item.enabled_cpc
-    obj.save()
+
+    update_data = {k: v for k, v in item.dict().items() if v is not None}
+    print(update_data)
+    CpcGoodKeywords.objects.filter(id=item.id).update(**update_data)
+
+    obj.refresh_from_db()
     return obj

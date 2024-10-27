@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from typing import Optional
 from ninja import Schema
 
 
@@ -70,4 +71,8 @@ class CpcKeywordEnableChangeINSchema(Schema):
     """
 
     id: int  # CPC关键词ID
-    enabled_cpc: bool  # 是否启用CPC竞价
+    enabled_cpc: Optional[bool] = None  # 是否启用CPC竞价
+    cpc_asc: Optional[int] = None  # CPC竞价价格每次递增的值
+    cpc_desc: Optional[int] = None  # CPC竞价价格每次递减的值
+    weightvalue: Optional[int] = None  # 权重值
+    maxcpc: Optional[int] = None  # 最大CPC值
