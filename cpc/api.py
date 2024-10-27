@@ -25,7 +25,7 @@ _PAGE_SIZE = 30
     tags=["cpc_products"],
     auth=JWTAuth(),
 )
-@paginate(PageNumberPagination, page_size=50)
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_cpc_products(request, shopid: int, q: str = None):
     """
     获取指定shopid的CPC商品

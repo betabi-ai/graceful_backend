@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "ninja_jwt",
     # local apps
     "cpc",
+    "reports",
 ]
 
 MIDDLEWARE = [
