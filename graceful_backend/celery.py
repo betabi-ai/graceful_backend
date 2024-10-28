@@ -24,6 +24,8 @@ app.conf.update(
     }
 )
 
+app.control.purge()  # 清除所有队列中的任务
+
 # print("app.conf: ", app.conf.result_backend)
 
 # 自动发现所有 Django app 中的 tasks.py 文件
