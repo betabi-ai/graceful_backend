@@ -10,6 +10,7 @@ from cpc.schemas import (
     CpcGoodKeywordsSchema,
     CpcKeywordEnableChangeINSchema,
     CpcProductsSchema,
+    Message,
     TopKeywordsSchema,
 )
 from ninja_jwt.authentication import JWTAuth
@@ -102,7 +103,7 @@ def get_top_keywords_by_shopid(request, shopid: int, dtype: int = 1, q: str = ""
 
 @router.patch(
     "/keywords/checkenable",
-    response=CpcGoodKeywordsSchema,
+    response={200: CpcGoodKeywordsSchema, 422: Message},
     tags=["update_cpc_keywords"],
     # auth=JWTAuth(),
     auth=None,
@@ -113,6 +114,17 @@ def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
     """
     # print("....................", item.id, item.enabled_cpc)
     obj = get_object_or_404(CpcGoodKeywords, id=item.id)
+
+    if item.weightvalue:
+        query = (
+            Q(weightvalue=item.weightvalue)
+            & Q(shopid=item.shopid)
+            & Q(keyword=item.keyword)
+            & ~Q(id=item.id)
+        )
+        other_same_keywords = CpcGoodKeywords.objects.filter(query)
+        if other_same_keywords.exists():
+            return 422, {"message": "已存在相同权重值的关键词"}
 
     update_data = {k: v for k, v in item.dict().items() if v is not None}
     print(update_data)

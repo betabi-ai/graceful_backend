@@ -143,11 +143,19 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # SCRAPYD_URL = "http://localhost:6800"
 SCRAPYD_URL = env("SCRAPYD_URL")
 print("SCRAPYD_URL: ", SCRAPYD_URL)
+# ===============================================
 
+# worker每次取任务的数量
+CELERYD_PREFETCH_MULTIPLIER = 1
+# 防止死锁
+CELERYD_FORCE = True
+# CELERY与RabbitMQ增加60秒心跳设置项
+BROKER_HEARTBEAT = 60
 
 # Celery 配置
-CELERY_BROKER_URL = env("CELERY_BROKER_URL")  # Redis 作为 Broker
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")  # 使用 Redis 存储任务结果
+CELERY_BROKER_URL = env("BROKER_URL")
+# CELERY_BROKER_URL = env("CELERY_BROKER_URL")  # Redis 作为 Broker
+# CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")  # 使用 Redis 存储任务结果
 
 CELERY_ACCEPT_CONTENT = ["json"]  # 指定接受的内容类型
 CELERY_TASK_SERIALIZER = "json"  # 指定任务序列化方式
@@ -164,6 +172,7 @@ INSTALLED_APPS += [
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
 
+# ===============================================
 
 NINJA_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=7),

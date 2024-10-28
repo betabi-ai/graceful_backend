@@ -3,6 +3,10 @@ from typing import Optional
 from ninja import Schema
 
 
+class Message(Schema):
+    message: str
+
+
 class UserSchema(Schema):
     username: str
     is_authenticated: bool
@@ -21,6 +25,7 @@ class CpcProductsSchema(Schema):
 
 class CpcGoodKeywordsSchema(Schema):
     id: int
+    shopid: str
     keyword: str
     itemmngid: str
     cpc: int
@@ -71,6 +76,8 @@ class CpcKeywordEnableChangeINSchema(Schema):
     """
 
     id: int  # CPC关键词ID
+    keyword: str
+    shopid: str
     enabled_cpc: Optional[bool] = None  # 是否启用CPC竞价
     cpc_asc: Optional[int] = None  # CPC竞价价格每次递增的值
     cpc_desc: Optional[int] = None  # CPC竞价价格每次递减的值
