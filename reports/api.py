@@ -6,13 +6,13 @@ from django.db.models import Q
 from ninja.pagination import paginate, PageNumberPagination
 
 from ninja_jwt.authentication import JWTAuth
-
+from django.conf import settings
 from reports.models import ReportCampagns
 from reports.schemas import ReportCampagnsSchema
 
 router = Router()
 
-_PAGE_SIZE = 30
+_PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
 
 
 @router.get(
@@ -20,13 +20,15 @@ _PAGE_SIZE = 30
     response=List[ReportCampagnsSchema],
     tags=["campagns_reports"],
     # auth=JWTAuth(),
-    auth=None,
+    auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
-def get_cpc_products(request, shopid: int, periodtype: int = 1):
+def get_campaigns(request, shopid: int, periodtype: int = 1):
     """
-    获取指定shopid的CPC商品
-    如果有查询参数q，则根据商品管理ID或商品名称进行模糊查询
+    获取指定 shopid 的 活动报表数据
+    :param request:
+    :param shopid: 店铺ID
+    :param periodtype: 0或2: 日报,  1:月报
     """
     query = Q(shopid=shopid)
     if periodtype == 0:

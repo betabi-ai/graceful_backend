@@ -1,12 +1,14 @@
-from typing import List
+from typing import List, Any
+from django.conf import settings
 from ninja import Router
-
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from ninja.pagination import paginate, PageNumberPagination
 
 from cpc.models import CpcGoodKeywords, CpcKeywordsGoods, TopKeywords
 from cpc.schemas import (
+    CampaignsMonthSchema,
     CpcGoodKeywordsSchema,
     CpcKeywordEnableChangeINSchema,
     CpcProductsSchema,
@@ -15,9 +17,10 @@ from cpc.schemas import (
 )
 from ninja_jwt.authentication import JWTAuth
 
+
 router = Router()
 
-_PAGE_SIZE = 30
+_PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
 
 
 @router.get(
@@ -80,27 +83,6 @@ def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
     return qs
 
 
-@router.get(
-    "/top_keywords/{int:shopid}",
-    response=List[TopKeywordsSchema],
-    tags=["top_five_keywords"],
-    auth=JWTAuth(),
-)
-@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
-def get_top_keywords_by_shopid(request, shopid: int, dtype: int = 1, q: str = ""):
-    """
-    获取指定shopid的CPC关键词排行榜
-    """
-    # print(shopid, dtype, q)
-    query = Q(shopid=shopid) & Q(date_type=dtype)
-    if q:
-        query &= Q(search_word__icontains=q) | Q(itemmngid__icontains=q)
-
-    qs = TopKeywords.objects.filter(query).order_by("-ldate")
-    # print("=============top keyword:\n", qs.query)
-    return qs
-
-
 @router.patch(
     "/keywords/checkenable",
     response={200: CpcGoodKeywordsSchema, 422: Message},
@@ -132,3 +114,93 @@ def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
 
     obj.refresh_from_db()
     return obj
+
+
+# =============================top_keywords api=============================
+@router.get(
+    "top_keywords/products/{int:shopid}",
+    response=List[Any],
+    tags=["campagns_reports"],
+    auth=JWTAuth(),
+)
+def get_products_from_top_keywords(request, shopid: int, month: str = ""):
+    """
+    获取指定 shopid 的 top_keywords 表中有数据的月份
+    只有 date_type=1 的才需要月份
+    :param request:
+    :param shopid: 店铺ID
+    """
+    #     select distinct itemmngid, itemid from top_keywords_datas where shopid='421947' and term_start_date ='2024-10-01' order by itemmngid
+    query = Q(shopid=shopid)
+    if month:
+        query &= Q(term_start_date=f"{month}-01")
+    qs = (
+        TopKeywords.objects.filter(query)
+        .distinct("itemmngid", "itemid")
+        .order_by("itemmngid")
+        .values("itemmngid", "itemid")
+    )
+    return qs
+
+
+@router.get(
+    "top_keywords/months/{int:shopid}",
+    response=List[CampaignsMonthSchema],
+    tags=["campagns_reports"],
+    auth=JWTAuth(),
+)
+def get_months_from_top_keywords(request, shopid: int):
+    """
+    获取指定 shopid 的 top_keywords 表中有数据的月份
+    只有 date_type=1 的才需要月份
+    :param request:
+    :param shopid: 店铺ID
+    """
+    query = Q(shopid=shopid)
+    # query &= Q(date_type=1)
+    qs = (
+        TopKeywords.objects.filter(query)
+        .distinct("term_start_date")
+        .order_by("-term_start_date")
+        .values("term_start_date")
+    )
+    # print(qs.query)
+    return [
+        CampaignsMonthSchema(
+            formatted_date=item["term_start_date"].strftime("%Y-%m"),
+        )
+        for item in qs
+    ]
+
+
+@router.get(
+    "/top_keywords",
+    response=List[Any],
+    tags=["top_five_keywords"],
+    auth=JWTAuth(),
+)
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
+def get_top_keywords_by_shopid(
+    request, shopid: int, month: str = "", itemid: str = "", q: str = ""
+):
+    """
+    获取指定shopid的CPC关键词排行榜
+    """
+    # print(shopid, dtype, q)
+    query = Q(shopid=shopid)
+    if month:
+        query &= Q(term_start_date=f"{month}-01")
+    if itemid:
+        query &= Q(itemid=itemid)
+
+    if q:
+        query &= Q(search_word__icontains=q) | Q(itemmngid__icontains=q)
+
+    qs = (
+        TopKeywords.objects.filter(query)
+        .values("search_word")
+        .annotate(show_count=Count("search_word"))
+        .order_by("-show_count")[:20]
+    )
+    print("=============top keyword:\n", qs.query)
+    return qs

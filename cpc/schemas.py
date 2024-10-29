@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from typing import Optional
 from ninja import Schema
+from pydantic import BaseModel, field_validator
 
 
 class Message(Schema):
@@ -83,3 +84,7 @@ class CpcKeywordEnableChangeINSchema(Schema):
     cpc_desc: Optional[int] = None  # CPC竞价价格每次递减的值
     weightvalue: Optional[int] = None  # 权重值
     maxcpc: Optional[int] = None  # 最大CPC值
+
+
+class CampaignsMonthSchema(Schema):
+    formatted_date: str  # 输出的日期字段，格式为 YYYY-MM

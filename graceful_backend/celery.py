@@ -24,7 +24,7 @@ app.conf.broker_transport_options = {
 #     }
 # )
 
-app.control.purge()  # 清除所有队列中的任务
+# app.control.purge()  # 清除所有队列中的任务
 
 # print("app.conf: ", app.conf.result_backend)
 

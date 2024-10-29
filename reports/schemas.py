@@ -1,5 +1,6 @@
 from ninja import ModelSchema
 
+
 from reports.models import ReportCampagns
 
 
