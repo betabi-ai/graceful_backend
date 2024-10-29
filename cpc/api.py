@@ -202,5 +202,5 @@ def get_top_keywords_by_shopid(
         .annotate(show_count=Count("search_word"))
         .order_by("-show_count")[:20]
     )
-    print("=============top keyword:\n", qs.query)
+    # print("=============top keyword:\n", qs.query)
     return qs
