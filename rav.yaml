@@ -8,4 +8,4 @@ scripts:
   curl_auth: |
     curl -X POST -H "Content-Type: application/json" -d '{"username": "graceful", "password": "graceful@2807"}' http://localhost:8000/api/token/pair
   curl_protect: |
-    curl -X GET -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI5ODYzOTg4LCJpYXQiOjE3Mjk4NjAzODgsImp0aSI6ImYyMjNiMjFlNmNiYjQ2YzQ5YzNmMGZiMWVmN2IxM2ZkIiwidXNlcl9pZCI6MX0.p-OMij-7sHCzpV4hQsvRpBn" http://localhost:8000/api/cpc/me
+    curl -X GET -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTczMDg1ODk4NCwiaWF0IjoxNzMwMjU0MTg0LCJqdGkiOiJkYTU5Y2MzNThiMTI0MTZkOGQ0YWZhYzQxOWRkZDlmZiIsInVzZXJfaWQiOjF9.W80YHaFETl_Q2uiZnTBK2htnOOFfmK0G4Lb_AbPOSj0" http://160.16.234.163:8035/api/cpc/me
