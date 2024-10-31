@@ -8,20 +8,40 @@ from ninja.pagination import paginate, PageNumberPagination
 
 from ninja_jwt.authentication import JWTAuth
 
-from shares.models import CpcKeywordsGoods
+from shares.models import CpcGoodKeywords, CpcKeywordsGoods
 
 router = Router()
 
 
 @router.get(
-    "/cpc_products/{int:shopid}",
+    "/products/{int:shopid}",
     response=List[Any],
-    tags=["cpc.reports"],
+    tags=["shares"],
     auth=None,
 )
 def get_all_cpc_products(request, shopid: int):
+    """
+    获取店铺所有的cpc商品,只返回商品id和商品管理id
+    """
     return (
         CpcKeywordsGoods.objects.filter(shopid=shopid)
         .values("itemmngid", "itemid")
         .order_by("itemmngid")
+    )
+
+
+@router.get(
+    "/products/{int:shopid}/{str:itemmngid}",
+    response=List[Any],
+    tags=["shares"],
+    auth=None,
+)
+def get_product_keywords(request, shopid: int, itemmngid: str):
+    """
+    获取指定商品的关键词
+    """
+    return (
+        CpcGoodKeywords.objects.filter(shopid=shopid, itemmngid=itemmngid)
+        .values("keyword", "id")
+        .order_by("keyword")
     )

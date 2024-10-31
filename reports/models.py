@@ -85,3 +85,74 @@ class ReportCampagns(models.Model):
     class Meta:
         managed = False
         db_table = "report_campagns"
+
+
+class ReportKeywords(models.Model):
+    """
+    "download_id",  # 返回的数据字段
+    """
+
+    """
+    "shopid",
+    "effectdate",
+    "periodtype",
+    "itempageurl",
+    "itemurl",
+    "keywordstring",
+    "ctr",
+    "keywordrecommendedcpc",
+    "keywordcpc",  # 以下字段3个类型报告字段顺序一致
+    "totalclicksvalid",
+    "totaladsalesbeforediscount",
+    "totalcpc",
+    "newclicksvalid",
+    "newadsalesbeforediscount",
+    "newcpc",
+    "existclicksvalid",
+    "existadsalesbeforediscount",
+    "existcpc",
+    "total12hgms",
+    "total12hcv",
+    "total12hcvr",
+    "total12hroas",
+    "total12hcpa",
+    "total720hgms",
+    "total720hcv",
+    "total720hcvr",
+    "total720hroas",
+    "total720hcpa",
+    "new12hgms",
+    "new12hcv",
+    "new12hcvr",
+    "new12hroas",
+    "new12hcpa",
+    "new720hgms",
+    "new720hcv",
+    "new720hcvr",
+    "new720hroas",
+    "new720hcpa",
+    "exist12hgms",
+    "exist12hcv",
+    "exist12hcvr",
+    "exist12hroas",
+    "exist12hcpa",
+    "exist720hgms",
+    "exist720hcv",
+    "exist720hcvr",
+    "exist720hroas",
+    "exist720hcpa",
+    """
+
+    shopid = models.CharField(max_length=20)
+    effectdate = models.DateField(blank=True, null=True)
+    itemurl = models.CharField(max_length=30)
+    periodtype = models.IntegerField(blank=True, null=True)
+    keywordstring = models.CharField(max_length=50)
+    ctr = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    totalclicksvalid = models.IntegerField(blank=True, null=True)
+    totaladsalesbeforediscount = models.IntegerField(blank=True, null=True)
+    totalcpc = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "report_keywords"

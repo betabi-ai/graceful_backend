@@ -179,7 +179,12 @@ def get_months_from_top_keywords(request, shopid: int):
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_top_keywords_by_shopid(
-    request, shopid: int, month: str = "", rank: str = "", itemid: str = "", q: str = ""
+    request,
+    shopid: int,
+    month: str = "",
+    rank: str = "",
+    itemmngid: str = "",
+    q: str = "",
 ):
     """
     获取指定shopid的CPC关键词排行榜
@@ -188,8 +193,8 @@ def get_top_keywords_by_shopid(
     query = Q(shopid=shopid)
     if month and month != "all" and month != "null":
         query &= Q(term_start_date=f"{month}-01")
-    if itemid and itemid != "all" and itemid != "null":
-        query &= Q(itemid=itemid)
+    if itemmngid and itemmngid != "all" and itemmngid != "null":
+        query &= Q(itemmngid=itemmngid)
     if rank and rank != "all" and rank != "null":
         query &= Q(search_word_rank=rank)
 

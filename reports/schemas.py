@@ -1,7 +1,7 @@
-from ninja import ModelSchema
+from ninja import ModelSchema, Schema
 
 
-from reports.models import ReportCampagns
+from reports.models import ReportCampagns, ReportKeywords
 
 
 class ReportCampagnsSchema(ModelSchema):
@@ -9,3 +9,10 @@ class ReportCampagnsSchema(ModelSchema):
         model = ReportCampagns
         fields = "__all__"
         exclude = ["created_at", "adsalesafterdiscount", "periodtype"]
+
+
+class ReportKeywordsSchema(ModelSchema):
+    class Meta:
+        model = ReportKeywords
+        fields = "__all__"
+        exclude = ["periodtype"]
