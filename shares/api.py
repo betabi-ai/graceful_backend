@@ -17,7 +17,7 @@ router = Router()
     "/products/{int:shopid}",
     response=List[Any],
     tags=["shares"],
-    auth=None,
+    auth=JWTAuth(),
 )
 def get_all_cpc_products(request, shopid: int):
     """
@@ -34,7 +34,7 @@ def get_all_cpc_products(request, shopid: int):
     "/products/{int:shopid}/{str:itemmngid}",
     response=List[Any],
     tags=["shares"],
-    auth=None,
+    auth=JWTAuth(),
 )
 def get_product_keywords(request, shopid: int, itemmngid: str):
     """

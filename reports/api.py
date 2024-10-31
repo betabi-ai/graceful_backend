@@ -44,7 +44,7 @@ def get_campaigns(request, shopid: int, periodtype: int = 1):
     "/keywords/{int:shopid}",
     response=List[ReportKeywordsSchema],
     tags=["reports"],
-    auth=None,
+    auth=JWTAuth(),
 )
 def get_keywords_reports(
     request,
