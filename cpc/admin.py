@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from cpc.models import CpcGoodKeywords
+from shares.models import CpcGoodKeywords
 
 
 class CpcGoodKeywordsAdmin(admin.ModelAdmin):

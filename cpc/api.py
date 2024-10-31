@@ -6,17 +6,15 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from ninja.pagination import paginate, PageNumberPagination
 
-from cpc.models import CpcGoodKeywords, CpcKeywordsGoods, TopKeywords
+from shares.models import CpcGoodKeywords, CpcKeywordsGoods, TopKeywords
 from cpc.schemas import (
     CampaignsMonthSchema,
     CpcGoodKeywordsSchema,
     CpcKeywordEnableChangeINSchema,
     CpcProductsSchema,
     Message,
-    TopKeywordsSchema,
 )
 from ninja_jwt.authentication import JWTAuth
-
 
 router = Router()
 
