@@ -338,7 +338,7 @@ def test_spider_task(**spider_args):
 
 
 @shared_task()
-def test_campaigns_budget_spider_task(**spider_args):
+def campaigns_budget_spider_task_tmp(**spider_args):
     """
     执行 test_campaigns_budget_spider 爬虫任务
 
