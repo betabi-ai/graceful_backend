@@ -353,6 +353,10 @@ def test_campaigns_budget_spider_task(**spider_args):
         "project": "gracefulRakutenSpiders",
         "spider": "test_campaigns_budget_spider",
     }
+    # print("=========spider_args:", spider_args)
     data.update(spider_args)
-    response = requests.post(SCHEDULE_URL, data=data)
-    return response.json()
+    try:
+        response = requests.post(SCHEDULE_URL, data=data)
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
