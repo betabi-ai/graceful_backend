@@ -118,7 +118,7 @@ def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
 @router.get(
     "top_keywords/products/{int:shopid}",
     response=List[Any],
-    tags=["campagns_reports"],
+    tags=["top_five_keywords"],
     auth=JWTAuth(),
 )
 def get_products_from_top_keywords(request, shopid: int, month: str = ""):
@@ -144,7 +144,7 @@ def get_products_from_top_keywords(request, shopid: int, month: str = ""):
 @router.get(
     "top_keywords/months/{int:shopid}",
     response=List[CampaignsMonthSchema],
-    tags=["campagns_reports"],
+    tags=["top_five_keywords"],
     auth=JWTAuth(),
 )
 def get_months_from_top_keywords(request, shopid: int):
@@ -209,3 +209,42 @@ def get_top_keywords_by_shopid(
     )
     # print("=============top keyword:\n", qs.query)
     return qs
+
+
+@router.get(
+    "/top_keywords/{int:shopid}/day",
+    response=List[Any],
+    tags=["top_five_keywords"],
+    auth=JWTAuth(),
+)
+@paginate(PageNumberPagination, page_size=150)
+def get_day_keywords_visit_datas(request, shopid: int, select_date: str):
+    query = Q(shopid=shopid)
+    query &= Q(term_end_date=select_date)
+    """
+    获取 指定日期下的 top_keywords 表中的数据
+    """
+    qs = (
+        TopKeywords.objects.filter(query)
+        .values(
+            "search_word",
+            "itemmngid",
+            "item_rank",
+            "item_visit",
+            "item_visit_all",
+            "item_order_count_all",
+            "search_word_order_count",
+            "item_cvr_all",
+            "search_word_cvr",
+            "search_word_rank",
+            "search_word_ichiba_rank",
+            "search_word_visit",
+            "search_word_ichiba_visit",
+        )
+        .order_by("itemmngid", "-search_word_visit")
+    )
+
+    return qs
+
+
+# =============================top_keywords api=============================
