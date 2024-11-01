@@ -1,7 +1,7 @@
 from typing import List, Any
 from django.conf import settings
 from ninja import Router
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from ninja.pagination import paginate, PageNumberPagination
@@ -201,14 +201,30 @@ def get_top_keywords_by_shopid(
     if q:
         query &= Q(search_word__icontains=q) | Q(itemmngid__icontains=q)
 
-    qs = (
+    queryset = (
         TopKeywords.objects.filter(query)
         .values("search_word")
         .annotate(show_count=Count("search_word"))
-        .order_by("-show_count")[:20]
+        .order_by("-show_count")
     )
-    # print("=============top keyword:\n", qs.query)
-    return qs
+
+    # 判断数据是否超过10条
+    if queryset.count() > 20:
+        # 取出前9条数据
+        top_19 = list(queryset[:19])
+
+        # 计算第10条及之后的金额总和
+        other_amount_sum = (
+            queryset[19:].aggregate(total=Sum("show_count"))["total"] or 0
+        )
+
+        # 组合前19条数据和“其他”条目
+        result = top_19 + [{"search_word": "其他", "show_count": other_amount_sum}]
+
+        return result
+    else:
+        # 数据不足20条，直接返回所有数据
+        return queryset
 
 
 @router.get(
@@ -218,9 +234,11 @@ def get_top_keywords_by_shopid(
     auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=150)
-def get_day_keywords_visit_datas(request, shopid: int, select_date: str):
+def get_day_keywords_visit_datas(request, shopid: int, select_date: str, q: str = ""):
     query = Q(shopid=shopid)
     query &= Q(term_end_date=select_date)
+    if q:
+        query &= Q(search_word__icontains=q) | Q(itemmngid__icontains=q)
     """
     获取 指定日期下的 top_keywords 表中的数据
     """
