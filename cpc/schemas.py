@@ -18,7 +18,7 @@ class UserSchema(Schema):
 class CpcProductsSchema(Schema):
     itemid: int
     itemmngid: str
-    itemname: str
+    # itemname: str
     keywordcounts: int | None = None
     cpc: int | None = None
     itemprice: int
