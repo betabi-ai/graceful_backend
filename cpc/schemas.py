@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import Optional
 from ninja import Schema
-from pydantic import BaseModel, field_validator
+from pydantic import Field
 
 
 class Message(Schema):
@@ -90,3 +90,8 @@ class CpcKeywordEnableChangeINSchema(Schema):
 
 class CampaignsMonthSchema(Schema):
     formatted_date: str  # 输出的日期字段，格式为 YYYY-MM
+
+
+class KeyValueTopKeywordsSchema(Schema):
+    key: str = Field(alias="search_word")
+    value: int = Field(alias="show_count")

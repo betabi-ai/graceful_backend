@@ -12,6 +12,7 @@ from cpc.schemas import (
     CpcGoodKeywordsSchema,
     CpcKeywordEnableChangeINSchema,
     CpcProductsSchema,
+    KeyValueTopKeywordsSchema,
     Message,
 )
 from ninja_jwt.authentication import JWTAuth
@@ -226,6 +227,45 @@ def get_top_keywords_by_shopid(
     else:
         # 数据不足20条，直接返回所有数据
         return queryset
+
+
+@router.get(
+    "/top_keywords/list",
+    response=List[Any],
+    tags=["top_five_keywords"],
+    auth=None,
+)
+# @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
+def get_top_keywords_list(
+    request,
+    shopid: int,
+    month: str = "",
+    rank: str = "",
+    itemmngid: str = "",
+    q: str = "",
+):
+    """
+    获取指定shopid的CPC关键词排行榜
+    """
+    query = Q(shopid=shopid)
+    if month and month != "all" and month != "null":
+        query &= Q(term_start_date=f"{month}-01")
+    if itemmngid and itemmngid != "all" and itemmngid != "null":
+        query &= Q(itemmngid=itemmngid)
+    if rank and rank != "all" and rank != "null":
+        query &= Q(search_word_rank=rank)
+
+    if q:
+        query &= Q(search_word__icontains=q) | Q(itemmngid__icontains=q)
+
+    queryset = (
+        TopKeywords.objects.filter(query)
+        .values("search_word")
+        .annotate(show_count=Count("search_word"))
+        .order_by("-show_count")
+    )
+
+    return queryset
 
 
 @router.get(
