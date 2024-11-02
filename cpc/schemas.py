@@ -19,6 +19,8 @@ class CpcProductsSchema(Schema):
     itemid: int
     itemmngid: str
     itemname: str
+    keywordcounts: int | None = None
+    cpc: int | None = None
     itemprice: int
     itemurl: str
     itemimageurl: str
