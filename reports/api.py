@@ -7,8 +7,12 @@ from ninja.pagination import paginate, PageNumberPagination
 
 from ninja_jwt.authentication import JWTAuth
 from django.conf import settings
-from reports.models import ReportCampagns, ReportKeywords
-from reports.schemas import ReportCampagnsSchema, ReportKeywordsSchema
+from reports.models import ReportCampagns, ReportGoods, ReportKeywords
+from reports.schemas import (
+    ReportCampagnsSchema,
+    ReportGoodsSchema,
+    ReportKeywordsSchema,
+)
 
 router = Router()
 
@@ -74,4 +78,25 @@ def get_keywords_reports(
     qs = ReportKeywords.objects.filter(query).order_by("effectdate")
     # print(qs.query)
 
+    return qs
+
+
+@router.get(
+    "/products/{int:shopid}",
+    response=List[ReportGoodsSchema],
+    tags=["reports"],
+    auth=JWTAuth(),
+)
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
+def get_products_reports(request, shopid: int, periodtype: int = 1):
+    """
+    获取指定 shopid 的 商品报表数据
+    :param request:
+    :param shopid: 店铺ID
+    :param periodtype: 0: 日报,  1:月报
+    """
+
+    query = Q(shopid=shopid) & Q(periodtype=periodtype)
+    qs = ReportGoods.objects.filter(query).order_by("-effectdate")
+    print(qs.query)
     return qs

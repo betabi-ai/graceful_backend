@@ -175,3 +175,84 @@ class ReportKeywords(models.Model):
     class Meta:
         managed = False
         db_table = "report_keywords"
+
+
+class ReportGoods(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    shopid = models.CharField(max_length=20)
+    effectdate = models.DateField(blank=True, null=True)
+    itempageurl = models.CharField(max_length=255, blank=True, null=True)
+    itemurl = models.CharField(max_length=30, blank=True, null=True)
+    periodtype = models.IntegerField(blank=True, null=True)
+    clickprice = models.IntegerField(blank=True, null=True)
+    ctr = models.DecimalField(max_digits=10, decimal_places=4, blank=True, null=True)
+    cpc = models.IntegerField(blank=True, null=True)
+    totalclicksvalid = models.IntegerField(blank=True, null=True)
+    totaladsalesbeforediscount = models.IntegerField(blank=True, null=True)
+    totalcpc = models.IntegerField(blank=True, null=True)
+    newclicksvalid = models.IntegerField(blank=True, null=True)
+    newadsalesbeforediscount = models.IntegerField(blank=True, null=True)
+    newcpc = models.IntegerField(blank=True, null=True)
+    existclicksvalid = models.IntegerField(blank=True, null=True)
+    existadsalesbeforediscount = models.IntegerField(blank=True, null=True)
+    existcpc = models.IntegerField(blank=True, null=True)
+    total12hgms = models.IntegerField(blank=True, null=True)
+    total12hcv = models.IntegerField(blank=True, null=True)
+    total12hcvr = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    total12hroas = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    total12hcpa = models.IntegerField(blank=True, null=True)
+    total720hgms = models.IntegerField(blank=True, null=True)
+    total720hcv = models.IntegerField(blank=True, null=True)
+    total720hcvr = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    total720hroas = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    total720hcpa = models.IntegerField(blank=True, null=True)
+    new12hgms = models.IntegerField(blank=True, null=True)
+    new12hcv = models.IntegerField(blank=True, null=True)
+    new12hcvr = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    new12hroas = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    new12hcpa = models.IntegerField(blank=True, null=True)
+    new720hgms = models.IntegerField(blank=True, null=True)
+    new720hcv = models.IntegerField(blank=True, null=True)
+    new720hcvr = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    new720hroas = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    new720hcpa = models.IntegerField(blank=True, null=True)
+    exist12hgms = models.IntegerField(blank=True, null=True)
+    exist12hcv = models.IntegerField(blank=True, null=True)
+    exist12hcvr = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    exist12hroas = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    exist12hcpa = models.IntegerField(blank=True, null=True)
+    exist720hgms = models.IntegerField(blank=True, null=True)
+    exist720hcv = models.IntegerField(blank=True, null=True)
+    exist720hcvr = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    exist720hroas = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    exist720hcpa = models.IntegerField(blank=True, null=True)
+    download_id = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "report_goods"
