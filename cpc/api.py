@@ -130,7 +130,8 @@ def get_products_from_top_keywords(request, shopid: int, month: str = ""):
     """
     #     select distinct itemmngid, itemid from top_keywords_datas where shopid='421947' and term_start_date ='2024-10-01' order by itemmngid
     query = Q(shopid=shopid)
-    if month:
+    if month and month != "all" and month != "null":
+        # print("month:===========", month)
         query &= Q(term_start_date=f"{month}-01")
     qs = (
         TopKeywords.objects.filter(query)
