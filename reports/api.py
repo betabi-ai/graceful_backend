@@ -52,7 +52,7 @@ def get_keywords_reports(
     start: str = None,
     end: str = None,
     kw: str = None,
-    pd: str = None,
+    itemurl: str = None,
     ptype: int = 1,
 ):
     """
@@ -69,8 +69,9 @@ def get_keywords_reports(
         query &= Q(effectdate__range=(start, end))
     if kw:
         query &= Q(keywordstring=kw)
-    if pd:
-        query &= Q(itemurl=pd)
+    if itemurl:
+        query &= Q(itemurl=itemurl)
     qs = ReportKeywords.objects.filter(query).order_by("effectdate")
+    # print(qs.query)
 
     return qs

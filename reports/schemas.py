@@ -12,6 +12,7 @@ class ReportCampagnsSchema(ModelSchema):
 
 
 class ReportKeywordsSchema(ModelSchema):
+
     class Meta:
         model = ReportKeywords
         fields = "__all__"

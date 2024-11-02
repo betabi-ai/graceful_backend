@@ -149,9 +149,28 @@ class ReportKeywords(models.Model):
     periodtype = models.IntegerField(blank=True, null=True)
     keywordstring = models.CharField(max_length=50)
     ctr = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+
     totalclicksvalid = models.IntegerField(blank=True, null=True)
     totaladsalesbeforediscount = models.IntegerField(blank=True, null=True)
     totalcpc = models.IntegerField(blank=True, null=True)
+    total12hgms = models.IntegerField(blank=True, null=True)
+    total12hcv = models.IntegerField(blank=True, null=True)
+    total12hcvr = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    total12hroas = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    total12hcpa = models.IntegerField(blank=True, null=True)
+    total720hgms = models.IntegerField(blank=True, null=True)
+    total720hcv = models.IntegerField(blank=True, null=True)
+    total720hcvr = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    total720hroas = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    total720hcpa = models.IntegerField(blank=True, null=True)
 
     class Meta:
         managed = False
