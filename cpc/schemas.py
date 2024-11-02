@@ -93,5 +93,5 @@ class CampaignsMonthSchema(Schema):
 
 
 class KeyValueTopKeywordsSchema(Schema):
-    key: str = Field(alias="search_word")
+    name: str = Field(alias="search_word")
     value: int = Field(alias="show_count")

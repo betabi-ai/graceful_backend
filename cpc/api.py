@@ -231,7 +231,7 @@ def get_top_keywords_by_shopid(
 
 @router.get(
     "/top_keywords/list",
-    response=List[Any],
+    response=List[KeyValueTopKeywordsSchema],
     tags=["top_five_keywords"],
     auth=None,
 )
