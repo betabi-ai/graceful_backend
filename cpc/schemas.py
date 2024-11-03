@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from typing import Optional
-from ninja import Schema
+from ninja import ModelSchema, Schema
 from pydantic import Field
 
 from shares.models import ShopCampagnsBudget
@@ -108,8 +108,19 @@ class KeyValueTopKeywordsSchema(Schema):
 
 
 # 用于返回店铺活动预算信息
-class ShopCampagnsBudgetSchema(Schema):
+class ShopCampagnsBudgetSchema(ModelSchema):
     class Meta:
         model = ShopCampagnsBudget
         fields = "__all__"
-        # exclude = ["created_at", "periodtype", "download_id"]
+
+
+class ShopCampagnsBudgetSEditchema(Schema):
+    """
+    用于更新店铺活动预算信息
+    """
+
+    campaignid: int
+    shopid: str
+    is_auto_calc: Optional[bool] = None  # 是否启用自动计算
+    bugdgetasc: Optional[int] = None  # 每次递增的值
+    maxbudget: Optional[int] = None  # 最大预算

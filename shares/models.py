@@ -167,7 +167,6 @@ class TopKeywords(models.Model):
 
 # 店铺广告预算模型
 class ShopCampagnsBudget(models.Model):
-    id = models.BigAutoField(primary_key=True)
     shopid = models.CharField(max_length=20)
     campaigntype = models.CharField(max_length=20, blank=True, null=True)
     campaignid = models.IntegerField(unique=True)

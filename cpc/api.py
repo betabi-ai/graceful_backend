@@ -19,6 +19,7 @@ from cpc.schemas import (
     CpcProductsSchema,
     KeyValueTopKeywordsSchema,
     Message,
+    ShopCampagnsBudgetSEditchema,
     ShopCampagnsBudgetSchema,
 )
 from ninja_jwt.authentication import JWTAuth
@@ -339,6 +340,30 @@ def get_shop_campaigns(request, shopid: int):
     qs = ShopCampagnsBudget.objects.filter(query)
     print(qs.query)
     return qs
+
+
+@router.patch(
+    "/shop_campaigns/edit",
+    response={200: ShopCampagnsBudgetSchema, 422: Message},
+    tags=["shop_campaigns"],
+    # auth=JWTAuth(),
+    auth=None,
+)
+def update_campaign_info(request, item: ShopCampagnsBudgetSEditchema):
+    """
+    更新：店铺活动预算信息
+    """
+    # print("....................", item.id, item.enabled_cpc)
+    obj = get_object_or_404(
+        ShopCampagnsBudget, campaignid=item.campaignid, shopid=item.shopid
+    )
+
+    update_data = {k: v for k, v in item.dict().items() if v is not None}
+    print(update_data)
+    ShopCampagnsBudget.objects.filter(campaignid=item.campaignid).update(**update_data)
+
+    obj.refresh_from_db()
+    return obj
 
 
 # ============================= 店铺活动=============================
