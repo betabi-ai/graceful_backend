@@ -86,7 +86,9 @@ def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
     """
     query = Q(shopid=shopid)
     query &= Q(itemmngid=itemmngid)
-    qs = CpcGoodKeywords.objects.filter(query).order_by("-enabled_cpc", "keyword")
+    qs = CpcGoodKeywords.objects.filter(query).order_by(
+        "-enabled_cpc", "keyword", "-cpc_rank_updatedat", "-natural_rank_updatedat"
+    )
     return qs
 
 
