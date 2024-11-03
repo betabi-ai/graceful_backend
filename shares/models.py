@@ -136,6 +136,7 @@ class ShopGood(models.Model):
         unique_together = (("shopid", "itemid"),)  # shopid和itemid的唯一约束
 
 
+# Top关键词模型
 class TopKeywords(models.Model):
     shopid = models.CharField(max_length=20)
     itemid = models.CharField(max_length=20)
@@ -162,3 +163,37 @@ class TopKeywords(models.Model):
     class Meta:
         managed = False
         db_table = "top_keywords_datas"
+
+
+# 店铺广告预算模型
+class ShopCampagnsBudget(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    shopid = models.CharField(max_length=20)
+    campaigntype = models.CharField(max_length=20, blank=True, null=True)
+    campaignid = models.IntegerField(unique=True)
+    campaignname = models.CharField(max_length=20)
+    clickprice = models.IntegerField()
+    budget = models.BigIntegerField()
+    maxbudget = models.BigIntegerField()
+    bugdgetasc = models.IntegerField()
+    budgetoverdatetime = models.DateTimeField(blank=True, null=True)
+    inactiveflag = models.BooleanField(blank=True, null=True)
+    isuserrankenabled = models.BooleanField(blank=True, null=True)
+    createdat = models.DateTimeField(blank=True, null=True)
+    updatedat = models.DateTimeField(blank=True, null=True)
+    itemcount = models.IntegerField(blank=True, null=True)
+    monclicks = models.IntegerField(blank=True, null=True)
+    dayclicks = models.IntegerField(blank=True, null=True)
+    totalclicks = models.IntegerField(blank=True, null=True)
+    monadsales = models.BigIntegerField(blank=True, null=True)
+    dayadsales = models.BigIntegerField(blank=True, null=True)
+    totaladsales = models.BigIntegerField(blank=True, null=True)
+    budgetconsumptionrate = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    created_at = models.DateTimeField(blank=True, null=True)
+    is_auto_calc = models.BooleanField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "shop_campagns_budget"

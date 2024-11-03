@@ -6,7 +6,12 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from ninja.pagination import paginate, PageNumberPagination
 
-from shares.models import CpcGoodKeywords, CpcKeywordsGoods, TopKeywords
+from shares.models import (
+    CpcGoodKeywords,
+    CpcKeywordsGoods,
+    ShopCampagnsBudget,
+    TopKeywords,
+)
 from cpc.schemas import (
     CampaignsMonthSchema,
     CpcGoodKeywordsSchema,
@@ -14,6 +19,7 @@ from cpc.schemas import (
     CpcProductsSchema,
     KeyValueTopKeywordsSchema,
     Message,
+    ShopCampagnsBudgetSchema,
 )
 from ninja_jwt.authentication import JWTAuth
 
@@ -60,8 +66,10 @@ def get_cpc_keywords_by_shopid(request, shopid: int, q: str = ""):
     if q:
         query &= Q(keyword__icontains=q) | Q(itemmngid__icontains=q)
 
-    qs = CpcGoodKeywords.objects.filter(query).order_by("-enabled_cpc", "itemmngid")
-    # print(qs.query)
+    qs = CpcGoodKeywords.objects.filter(query).order_by(
+        "-enabled_cpc", "itemmngid", "-cpc_rank_updatedat", "-natural_rank_updatedat"
+    )
+    print(qs.query)
     return qs
 
 
@@ -307,3 +315,28 @@ def get_day_keywords_visit_datas(request, shopid: int, select_date: str, q: str 
 
 
 # =============================top_keywords api=============================
+
+
+# ============================ 店铺活动=============================
+
+
+@router.get(
+    "/shop_campaigns/{int:shopid}",
+    response=List[ShopCampagnsBudgetSchema],
+    tags=["shop_campaigns"],
+    auth=JWTAuth(),
+)
+def get_shop_campaigns(request, shopid: int):
+    """
+    获取指定shopid的活动预算信息
+    :param request:
+    :param shopid: 店铺ID
+    """
+    query = Q(shopid=shopid)
+
+    qs = ShopCampagnsBudget.objects.filter(query)
+    print(qs.query)
+    return qs
+
+
+# ============================= 店铺活动=============================

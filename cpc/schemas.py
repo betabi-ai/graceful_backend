@@ -3,11 +3,15 @@ from typing import Optional
 from ninja import Schema
 from pydantic import Field
 
+from shares.models import ShopCampagnsBudget
 
+
+# 主要用于错误信息的返回
 class Message(Schema):
     message: str
 
 
+# User Schema
 class UserSchema(Schema):
     username: str
     is_authenticated: bool
@@ -15,6 +19,7 @@ class UserSchema(Schema):
     date_joined: datetime = None
 
 
+# 用于返回CPC商品列表
 class CpcProductsSchema(Schema):
     itemid: int
     itemmngid: str
@@ -26,6 +31,7 @@ class CpcProductsSchema(Schema):
     itemimageurl: str
 
 
+# 用于返回CPC关键词列表
 class CpcGoodKeywordsSchema(Schema):
     id: int
     shopid: str
@@ -45,6 +51,7 @@ class CpcGoodKeywordsSchema(Schema):
     enabled_cpc: bool  # 是否启用CPC竞价
 
 
+# 用于返回top关键词列表
 class TopKeywordsSchema(Schema):
     shopid: int
     itemid: int
@@ -73,6 +80,7 @@ class TopKeywordsSchema(Schema):
         }
 
 
+# 用于处理更新CPC关键词功能的输入
 class CpcKeywordEnableChangeINSchema(Schema):
     """
     用于更新CPC关键词的 enabled_cpc 字段
@@ -88,10 +96,20 @@ class CpcKeywordEnableChangeINSchema(Schema):
     maxcpc: Optional[int] = None  # 最大CPC值
 
 
+# 用于返回活动报表中的月份列表
 class CampaignsMonthSchema(Schema):
     formatted_date: str  # 输出的日期字段，格式为 YYYY-MM
 
 
+# 用于返回TopKeywords中的关键词和展示次数
 class KeyValueTopKeywordsSchema(Schema):
     name: str = Field(alias="search_word")
     value: int = Field(alias="show_count")
+
+
+# 用于返回店铺活动预算信息
+class ShopCampagnsBudgetSchema(Schema):
+    class Meta:
+        model = ShopCampagnsBudget
+        fields = "__all__"
+        # exclude = ["created_at", "periodtype", "download_id"]
