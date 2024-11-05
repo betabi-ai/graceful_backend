@@ -2,7 +2,7 @@ from typing import Any, List
 from ninja import Router
 
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
+from django.db.models import Q, F
 from ninja.pagination import paginate, PageNumberPagination
 
 from ninja_jwt.authentication import JWTAuth
@@ -23,7 +23,6 @@ _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
     "/campaigns/{int:shopid}",
     response=List[ReportCampagnsSchema],
     tags=["reports"],
-    # auth=JWTAuth(),
     auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
@@ -40,6 +39,36 @@ def get_campaigns(request, shopid: int, periodtype: int = 1):
     else:
         query &= Q(periodtype=periodtype)
     qs = ReportCampagns.objects.filter(query).order_by("-effectdate")
+    print(qs.query)
+    return qs
+
+
+@router.get(
+    "/campaigns/chart/{int:shopid}",
+    response=List[ReportCampagnsSchema],
+    tags=["reports"],
+    auth=JWTAuth(),
+)
+def get_campaigns_by_date(
+    request, shopid: int, periodtype: int = 2, start: str = None, end: str = None
+):
+    """
+    获取指定 shopid 的 活动报表数据
+    :param request:
+    :param shopid: 店铺ID
+    :param periodtype: 0或2: 日报,  1:月报
+    """
+    query = Q(shopid=shopid)
+    if start and end:
+        query &= Q(startdate__range=(start, end))
+    if periodtype == 0:
+        query &= Q(periodtype=0) | Q(periodtype=2)
+    else:
+        query &= Q(periodtype=periodtype)
+    qs = ReportCampagns.objects.filter(query, startdate=F("enddate")).order_by(
+        "effectdate"
+    )
+    print("************")
     print(qs.query)
     return qs
 
