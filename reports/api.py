@@ -18,6 +18,8 @@ router = Router()
 
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
 
+# =============================================campaigns reports===================================================
+
 
 @router.get(
     "/campaigns/{int:shopid}",
@@ -49,11 +51,11 @@ def get_campaigns(request, shopid: int, periodtype: int = 1):
     tags=["reports"],
     auth=JWTAuth(),
 )
-def get_campaigns_by_date(
+def get_campaigns_reports_by_date(
     request, shopid: int, periodtype: int = 2, start: str = None, end: str = None
 ):
     """
-    获取指定 shopid 的 活动报表数据
+    获取指定 shopid 的 活动报表数据,根据日期，并且不需要进行分页
     :param request:
     :param shopid: 店铺ID
     :param periodtype: 0或2: 日报,  1:月报
@@ -68,9 +70,14 @@ def get_campaigns_by_date(
     qs = ReportCampagns.objects.filter(query, startdate=F("enddate")).order_by(
         "effectdate"
     )
-    print("************")
-    print(qs.query)
+    # print("************")
+    # print(qs.query)
     return qs
+
+
+# ================================================================================================
+
+# =============================================keywords reports===================================================
 
 
 @router.get(
@@ -94,7 +101,7 @@ def get_keywords_reports(
     :param shopid: 店铺ID
     :param periodtype: 0或2: 日报,  1:月报
     """
-    print("^^^^^^^^^^^^^^^^^^^^^")
+    # print("^^^^^^^^^^^^^^^^^^^^^")
     query = Q(shopid=shopid)
     if ptype:
         query &= Q(periodtype=ptype)
@@ -108,6 +115,11 @@ def get_keywords_reports(
     # print(qs.query)
 
     return qs
+
+
+# ================================================================================================
+
+# =============================================product reports===================================================
 
 
 @router.get(
@@ -129,3 +141,41 @@ def get_products_reports(request, shopid: int, periodtype: int = 1):
     qs = ReportGoods.objects.filter(query).order_by("-effectdate")
     print(qs.query)
     return qs
+
+
+@router.get(
+    "/products/chart/{int:shopid}",
+    response=List[ReportGoodsSchema],
+    tags=["reports"],
+    auth=JWTAuth(),
+)
+def get_products_reports_by_date(
+    request,
+    shopid: int,
+    itemurl: str,
+    periodtype: int = 0,
+    start: str = None,
+    end: str = None,
+):
+    """
+    获取指定 shopid 的 商品报表数据,根据日期，并且不需要进行分页
+    :param request:
+    :param shopid: 店铺ID
+    :param periodtype: 0或2: 日报,  1:月报
+    """
+    query = Q(shopid=shopid)
+    query &= Q(periodtype=periodtype)
+    if itemurl:
+        query &= Q(itemurl=itemurl)
+    if start and end:
+        query &= Q(effectdate__range=(start, end))
+    # if periodtype:
+
+    qs = ReportGoods.objects.filter(query).order_by("effectdate")
+    print("************sssssss")
+    print(qs.query)
+    print(len(qs))
+    return qs
+
+
+# =================================================================================================
