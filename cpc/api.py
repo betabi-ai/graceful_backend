@@ -385,7 +385,7 @@ def update_campaign_info(request, item: ShopCampagnsBudgetSEditchema):
 @router.get(
     "/shop_campaigns/logs/{int:shopid}",
     # response=List[ShopCampagnsBudgetLogSchema],
-    response=List[ShopCampagnsBudgetLogSEditchema],
+    response=List[ShopCampagnsBudgetLogSchema],
     tags=["shop_campaigns"],
     # auth=JWTAuth(),
     auth=None,
@@ -394,9 +394,6 @@ def get_each_hour_campaign_infos(request, shopid: int, start: str, end: str):
 
     q = Q(shopid=shopid)
     if start and end:
-        # start_date = datetime.strptime(start, "%Y-%m-%d").date()
-        # end_date = start_date + timedelta(days=1)
-        # end_date = end_date.strftime("%Y-%m-%d 00:00:00")
         q &= Q(created_at__range=(start, end))
 
     qs = (
@@ -413,24 +410,7 @@ def get_each_hour_campaign_infos(request, shopid: int, start: str, end: str):
         .order_by("created_at")
     )
 
-    print(qs.query)
-
-    result = []
-    for d1, d2 in zip(qs[:], qs[1:]):
-
-        diff = d2.totaladsales - d1.totaladsales
-
-        combind = {
-            "start": d1.created_at,
-            "start_sales": d1.totaladsales,
-            "end": d2.created_at,
-            "end_sales": d2.totaladsales,
-            "diff": diff,
-            "hour": d1.hour,
-        }
-        result.append(combind)
-
-    return result
+    return qs
 
 
 # =====================================================================
