@@ -1,15 +1,19 @@
 from typing import List, Any
 from django.conf import settings
+from datetime import datetime, date, timedelta
 from ninja import Router
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
+from django.db.models import Q, F, Window
 from ninja.pagination import paginate, PageNumberPagination
+from django.db.models.functions import RowNumber, TruncHour
+
 
 from shares.models import (
     CpcGoodKeywords,
     CpcKeywordsGoods,
     ShopCampagnsBudget,
+    ShopCampagnsBudgetLog,
     TopKeywords,
 )
 from cpc.schemas import (
@@ -19,6 +23,8 @@ from cpc.schemas import (
     CpcProductsSchema,
     KeyValueTopKeywordsSchema,
     Message,
+    ShopCampagnsBudgetLogSEditchema,
+    ShopCampagnsBudgetLogSchema,
     ShopCampagnsBudgetSEditchema,
     ShopCampagnsBudgetSchema,
 )
@@ -27,6 +33,8 @@ from ninja_jwt.authentication import JWTAuth
 router = Router()
 
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
+
+# ===========================cpc products==========================================
 
 
 @router.get(
@@ -47,6 +55,11 @@ def get_cpc_products(request, shopid: int, q: str = None):
     qs = CpcKeywordsGoods.objects.filter(query).order_by("itemmngid")
     print(qs.query)
     return qs
+
+
+# =====================================================================
+
+# =============================cpc keywords========================================
 
 
 @router.get(
@@ -124,6 +137,9 @@ def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
 
     obj.refresh_from_db()
     return obj
+
+
+# =====================================================================
 
 
 # =============================top_keywords api=============================
@@ -317,7 +333,7 @@ def get_day_keywords_visit_datas(request, shopid: int, select_date: str, q: str 
     return qs
 
 
-# =============================top_keywords api=============================
+# =====================================================================
 
 
 # ============================ 店铺活动=============================
@@ -366,4 +382,55 @@ def update_campaign_info(request, item: ShopCampagnsBudgetSEditchema):
     return obj
 
 
-# ============================= 店铺活动=============================
+@router.get(
+    "/shop_campaigns/logs/{int:shopid}",
+    # response=List[ShopCampagnsBudgetLogSchema],
+    response=List[ShopCampagnsBudgetLogSEditchema],
+    tags=["shop_campaigns"],
+    # auth=JWTAuth(),
+    auth=None,
+)
+def get_each_hour_campaign_infos(request, shopid: int, start: str, end: str):
+
+    q = Q(shopid=shopid)
+    if start and end:
+        # start_date = datetime.strptime(start, "%Y-%m-%d").date()
+        # end_date = start_date + timedelta(days=1)
+        # end_date = end_date.strftime("%Y-%m-%d 00:00:00")
+        q &= Q(created_at__range=(start, end))
+
+    qs = (
+        ShopCampagnsBudgetLog.objects.filter(q)
+        .annotate(
+            hour=TruncHour("created_at"),
+            row_number=Window(
+                expression=RowNumber(),
+                partition_by=F("hour"),
+                order_by=F("created_at").desc(),
+            ),
+        )
+        .filter(row_number=1)
+        .order_by("created_at")
+    )
+
+    print(qs.query)
+
+    result = []
+    for d1, d2 in zip(qs[:], qs[1:]):
+
+        diff = d2.totaladsales - d1.totaladsales
+
+        combind = {
+            "start": d1.created_at,
+            "start_sales": d1.totaladsales,
+            "end": d2.created_at,
+            "end_sales": d2.totaladsales,
+            "diff": diff,
+            "hour": d1.hour,
+        }
+        result.append(combind)
+
+    return result
+
+
+# =====================================================================

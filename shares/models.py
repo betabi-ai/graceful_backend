@@ -196,3 +196,30 @@ class ShopCampagnsBudget(models.Model):
     class Meta:
         managed = False
         db_table = "shop_campagns_budget"
+
+
+# 店铺广告预算日志模型
+class ShopCampagnsBudgetLog(models.Model):
+    shopid = models.CharField(max_length=20)
+    campaigntype = models.CharField(max_length=20, blank=True, null=True)
+    campaignid = models.IntegerField()
+    campaignname = models.CharField(max_length=20)
+    clickprice = models.IntegerField()
+    budget = models.BigIntegerField()
+    inactiveflag = models.BooleanField(blank=True, null=True)
+    isuserrankenabled = models.BooleanField(blank=True, null=True)
+    updatedat = models.DateTimeField(blank=True, null=True)
+    monclicks = models.IntegerField(blank=True, null=True)
+    dayclicks = models.IntegerField(blank=True, null=True)
+    totalclicks = models.IntegerField(blank=True, null=True)
+    monadsales = models.BigIntegerField(blank=True, null=True)
+    dayadsales = models.BigIntegerField(blank=True, null=True)
+    totaladsales = models.BigIntegerField(blank=True, null=True)
+    budgetconsumptionrate = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True
+    )
+    created_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "shop_campagns_budget_log"

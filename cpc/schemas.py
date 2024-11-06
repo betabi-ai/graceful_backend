@@ -1,9 +1,9 @@
 from datetime import datetime, date
 from typing import Optional
 from ninja import ModelSchema, Schema
-from pydantic import Field
+from pydantic import Field, field_validator
 
-from shares.models import ShopCampagnsBudget
+from shares.models import ShopCampagnsBudget, ShopCampagnsBudgetLog
 
 
 # 主要用于错误信息的返回
@@ -114,6 +114,12 @@ class ShopCampagnsBudgetSchema(ModelSchema):
         fields = "__all__"
 
 
+class ShopCampagnsBudgetLogSchema(ModelSchema):
+    class Meta:
+        model = ShopCampagnsBudgetLog
+        fields = "__all__"
+
+
 class ShopCampagnsBudgetSEditchema(Schema):
     """
     用于更新店铺活动预算信息
@@ -124,3 +130,12 @@ class ShopCampagnsBudgetSEditchema(Schema):
     is_auto_calc: Optional[bool] = None  # 是否启用自动计算
     bugdgetasc: Optional[int] = None  # 每次递增的值
     maxbudget: Optional[int] = None  # 最大预算
+
+
+class ShopCampagnsBudgetLogSEditchema(Schema):
+    start: datetime | None = None
+    end: datetime | None = None
+    diff: int | None = None
+    start_sales: int | None = None
+    end_sales: int | None = None
+    hour: datetime | None = None
