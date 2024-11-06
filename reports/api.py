@@ -81,11 +81,48 @@ def get_campaigns_reports_by_date(
 
 
 @router.get(
+    "/keywords/chart/{int:shopid}",
+    response=List[ReportKeywordsSchema],
+    tags=["reports"],
+    auth=JWTAuth(),
+)
+def get_keywords_reports_by_con(
+    request,
+    shopid: int,
+    start: str = None,
+    end: str = None,
+    kw: str = None,
+    itemurl: str = None,
+    ptype: int = 1,
+):
+    """
+    获取指定 shopid 的 关键词报表数据
+    :param request:
+    :param shopid: 店铺ID
+    :param periodtype: 0或2: 日报,  1:月报
+    """
+    # print("^^^^^^^^^^^^^^^^^^^^^")
+    query = Q(shopid=shopid)
+    query &= Q(periodtype=ptype)
+    if start and end:
+        query &= Q(effectdate__range=(start, end))
+    if kw:  # and kw != "all" and kw != "null":
+        query &= Q(keywordstring=kw)
+    if itemurl:
+        query &= Q(itemurl=itemurl)
+    qs = ReportKeywords.objects.filter(query).order_by("effectdate")
+    print(qs.query)
+
+    return qs
+
+
+@router.get(
     "/keywords/{int:shopid}",
     response=List[ReportKeywordsSchema],
     tags=["reports"],
     auth=JWTAuth(),
 )
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_keywords_reports(
     request,
     shopid: int,
@@ -103,16 +140,15 @@ def get_keywords_reports(
     """
     # print("^^^^^^^^^^^^^^^^^^^^^")
     query = Q(shopid=shopid)
-    if ptype:
-        query &= Q(periodtype=ptype)
+    query &= Q(periodtype=ptype)
     if start and end:
         query &= Q(effectdate__range=(start, end))
-    if kw:
+    if kw and kw != "all" and kw != "null":
         query &= Q(keywordstring=kw)
     if itemurl:
         query &= Q(itemurl=itemurl)
     qs = ReportKeywords.objects.filter(query).order_by("effectdate")
-    # print(qs.query)
+    print(qs.query)
 
     return qs
 
