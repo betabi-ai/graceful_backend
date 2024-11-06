@@ -354,3 +354,23 @@ def refresh_rrp_cookies_task(**spider_args):
     data.update(spider_args)
     response = requests.post(SCHEDULE_URL, data=data)
     return response.json()
+
+
+@shared_task()
+def campaigns_budget_login_spider_task(**spider_args):
+    """
+    执行 campaigns_budget_login_spider 爬虫任务
+    刷新rrp的cookies
+    """
+    """
+    curl http://localhost:6800/schedule.json -d arg1=val1 -d project=gracefulRakutenSpiders -d spider=campaigns_budget_login_spider
+    """
+    print("Task started")
+
+    data = {
+        "project": "gracefulRakutenSpiders",
+        "spider": "campaigns_budget_login_spider",
+    }
+    data.update(spider_args)
+    response = requests.post(SCHEDULE_URL, data=data)
+    return response.json()
