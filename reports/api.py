@@ -147,7 +147,7 @@ def get_keywords_reports(
         query &= Q(keywordstring=kw)
     if itemurl:
         query &= Q(itemurl=itemurl)
-    qs = ReportKeywords.objects.filter(query).order_by("effectdate")
+    qs = ReportKeywords.objects.filter(query).order_by("-effectdate")
     print(qs.query)
 
     return qs
