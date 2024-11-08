@@ -6,11 +6,12 @@ from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, F, Window
 from ninja.pagination import paginate, PageNumberPagination
-from django.db.models.functions import RowNumber, TruncHour
+from django.db.models.functions import RowNumber, TruncHour, TruncDay
 
 
 from shares.models import (
     CpcGoodKeywords,
+    CpcGoodKeywordsRankLog,
     CpcKeywordsGoods,
     ShopCampagnsBudget,
     ShopCampagnsBudgetLog,
@@ -22,6 +23,7 @@ from cpc.schemas import (
     CpcKeywordEnableChangeINSchema,
     CpcProductsSchema,
     KeyValueTopKeywordsSchema,
+    KeywordsRankLogSchema,
     Message,
     ShopCampagnsBudgetLogSEditchema,
     ShopCampagnsBudgetLogSchema,
@@ -90,7 +92,7 @@ def get_cpc_keywords_by_shopid(request, shopid: int, q: str = ""):
 @router.get(
     "/keywords/{int:shopid}/{str:itemmngid}",
     response=List[CpcGoodKeywordsSchema],
-    tags=["cpc_itemmngid_keywords"],
+    tags=["cpc_keywords"],
     auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
@@ -109,7 +111,7 @@ def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
 @router.patch(
     "/keywords/checkenable",
     response={200: CpcGoodKeywordsSchema, 422: Message},
-    tags=["update_cpc_keywords"],
+    tags=["cpc_keywords"],
     # auth=JWTAuth(),
     auth=None,
 )
@@ -137,6 +139,54 @@ def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
 
     obj.refresh_from_db()
     return obj
+
+
+@router.get(
+    "/keywords/histories/{int:shopid}",
+    response=List[KeywordsRankLogSchema],
+    tags=["cpc_keywords"],
+    # auth=JWTAuth(),
+    auth=None,
+)
+# @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
+def get_keywords_rank_history_datas(
+    request,
+    shopid: int,
+    itemid: str,
+    kw: str,
+    ranktype: str,
+    start: str,
+    end: str,
+    dtype: str = "day",
+):
+    print(".......")
+    query = Q(shopid=shopid)
+    query &= Q(itemid=itemid)
+    query &= Q(keyword=kw)
+    query &= Q(rank_type=ranktype)
+    query &= Q(created_at__range=(start, end))
+
+    qs = (
+        CpcGoodKeywordsRankLog.objects.filter(query)
+        .annotate(
+            row_number=Window(
+                expression=RowNumber(),
+                partition_by=(
+                    TruncHour("created_at")
+                    if dtype == "hour"
+                    else TruncDay("created_at")
+                ),
+                order_by=F("created_at").desc(),
+            ),
+        )
+        .filter(row_number=1)
+        .order_by("created_at")
+    )
+
+    print(qs.query)
+    print(qs)
+
+    return qs
 
 
 # =====================================================================

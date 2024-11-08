@@ -37,6 +37,7 @@ class CpcGoodKeywordsSchema(Schema):
     shopid: str
     keyword: str
     itemmngid: str
+    itemid: str
     cpc: int
     maxcpc: int
     recommendationcpc: int
@@ -139,3 +140,10 @@ class ShopCampagnsBudgetLogSEditchema(Schema):
     start_sales: int | None = None
     end_sales: int | None = None
     hour: datetime | None = None
+
+
+class KeywordsRankLogSchema(Schema):
+    cpc: int
+    recommendationcpc: int
+    rank: int
+    created_at: datetime
