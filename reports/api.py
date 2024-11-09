@@ -165,7 +165,14 @@ def get_keywords_reports(
     auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
-def get_products_reports(request, shopid: int, periodtype: int = 1):
+def get_products_reports(
+    request,
+    shopid: int,
+    itemurl: str,
+    periodtype: int = 0,
+    start: str = None,
+    end: str = None,
+):
     """
     获取指定 shopid 的 商品报表数据
     :param request:
@@ -174,6 +181,10 @@ def get_products_reports(request, shopid: int, periodtype: int = 1):
     """
 
     query = Q(shopid=shopid) & Q(periodtype=periodtype)
+    if itemurl and itemurl != "all" and itemurl != "null":
+        query &= Q(itemurl=itemurl)
+    if start and end:
+        query &= Q(effectdate__range=(start, end))
     qs = ReportGoods.objects.filter(query).order_by("-effectdate")
     print(qs.query)
     return qs
