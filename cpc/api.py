@@ -1,6 +1,5 @@
 from typing import List, Any
 from django.conf import settings
-from datetime import datetime, date, timedelta
 from ninja import Router
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404
@@ -25,7 +24,6 @@ from cpc.schemas import (
     KeyValueTopKeywordsSchema,
     KeywordsRankLogSchema,
     Message,
-    ShopCampagnsBudgetLogSEditchema,
     ShopCampagnsBudgetLogSchema,
     ShopCampagnsBudgetSEditchema,
     ShopCampagnsBudgetSchema,
@@ -55,7 +53,7 @@ def get_cpc_products(request, shopid: int, q: str = None):
     if q:
         query &= Q(itemmngid__icontains=q) | Q(itemname__icontains=q)
     qs = CpcKeywordsGoods.objects.filter(query).order_by("itemmngid")
-    print(qs.query)
+    # print(qs.query)
     return qs
 
 
@@ -85,7 +83,7 @@ def get_cpc_keywords_by_shopid(request, shopid: int, q: str = ""):
     qs = CpcGoodKeywords.objects.filter(query).order_by(
         "-enabled_cpc", "itemmngid", "-cpc_rank_updatedat", "-natural_rank_updatedat"
     )
-    print(qs.query)
+    # print(qs.query)
     return qs
 
 
@@ -113,8 +111,8 @@ def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
     "/keywords/checkenable",
     response={200: CpcGoodKeywordsSchema, 422: Message},
     tags=["cpc_keywords"],
-    # auth=JWTAuth(),
-    auth=None,
+    auth=JWTAuth(),
+    # auth=None,
 )
 def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
     """
@@ -146,8 +144,8 @@ def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
     "/keywords/histories/{int:shopid}",
     response=List[KeywordsRankLogSchema],
     tags=["cpc_keywords"],
-    # auth=JWTAuth(),
-    auth=None,
+    auth=JWTAuth(),
+    # auth=None,
 )
 # @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_keywords_rank_history_datas(
@@ -184,8 +182,8 @@ def get_keywords_rank_history_datas(
         .order_by("created_at")
     )
 
-    print(qs.query)
-    print(qs)
+    # print(qs.query)
+    # print(qs)
 
     return qs
 
@@ -405,7 +403,7 @@ def get_shop_campaigns(request, shopid: int):
     query = Q(shopid=shopid)
 
     qs = ShopCampagnsBudget.objects.filter(query)
-    print(qs.query)
+    # print(qs.query)
     return qs
 
 
@@ -413,8 +411,8 @@ def get_shop_campaigns(request, shopid: int):
     "/shop_campaigns/edit",
     response={200: ShopCampagnsBudgetSchema, 422: Message},
     tags=["shop_campaigns"],
-    # auth=JWTAuth(),
-    auth=None,
+    auth=JWTAuth(),
+    # auth=None,
 )
 def update_campaign_info(request, item: ShopCampagnsBudgetSEditchema):
     """
@@ -438,8 +436,8 @@ def update_campaign_info(request, item: ShopCampagnsBudgetSEditchema):
     # response=List[ShopCampagnsBudgetLogSchema],
     response=List[ShopCampagnsBudgetLogSchema],
     tags=["shop_campaigns"],
-    # auth=JWTAuth(),
-    auth=None,
+    auth=JWTAuth(),
+    # auth=None,
 )
 def get_each_hour_campaign_infos(request, shopid: int, start: str, end: str):
 
