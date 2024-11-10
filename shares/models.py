@@ -142,7 +142,7 @@ class TopKeywords(models.Model):
     itemid = models.CharField(max_length=20)
     search_word = models.CharField(max_length=200)
     itemmngid = models.CharField(max_length=32)
-    ldate = models.DateTimeField(blank=True, null=True)
+    ldate = models.DateField(blank=True, null=True)
     item_rank = models.IntegerField()
     item_visit = models.IntegerField()
     date_type = models.IntegerField()

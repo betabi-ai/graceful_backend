@@ -58,7 +58,7 @@ class TopKeywordsSchema(Schema):
     itemid: int
     search_word: str
     itemmngid: str
-    ldate: datetime | None = None
+    ldate: date | None = None
     item_rank: int | None = None
     item_visit: int | None = None
     item_visit_all: int | None = None
