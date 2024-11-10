@@ -76,9 +76,9 @@ def get_cpc_keywords_by_shopid(request, shopid: int, q: str = ""):
     """
     获取指定shopid的CPC关键词
     """
-    print(shopid, q)
-    print(shopid)
+
     query = Q(shopid=shopid)
+    query &= Q(is_deleted=False)
     if q:
         query &= Q(keyword__icontains=q) | Q(itemmngid__icontains=q)
 
@@ -102,6 +102,7 @@ def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
     """
     query = Q(shopid=shopid)
     query &= Q(itemmngid=itemmngid)
+    query &= Q(is_deleted=False)
     qs = CpcGoodKeywords.objects.filter(query).order_by(
         "-enabled_cpc", "keyword", "-cpc_rank_updatedat", "-natural_rank_updatedat"
     )
