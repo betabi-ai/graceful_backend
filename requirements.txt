@@ -26,6 +26,7 @@ django-ninja-jwt==5.3.4
 django-timezone-field==7.0
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
+et_xmlfile==2.0.0
 fire==0.7.0
 gunicorn==23.0.0
 idna==3.10
@@ -33,6 +34,7 @@ injector==0.22.0
 kombu==5.4.2
 markdown-it-py==3.0.0
 mdurl==0.1.2
+openpyxl==3.1.5
 packaging==24.1
 prompt_toolkit==3.0.48
 psycopg==3.2.3
