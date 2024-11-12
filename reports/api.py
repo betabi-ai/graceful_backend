@@ -236,8 +236,8 @@ def get_keywords_reports(
 @router.get(
     "/keywords/export/{int:shopid}",
     tags=["reports"],
-    # auth=JWTAuth(),
-    auth=None,
+    auth=JWTAuth(),
+    # auth=None,
 )
 def export_report_keyword_data_to_excel(
     request,
