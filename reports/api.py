@@ -2,6 +2,8 @@ from typing import Any, List
 from django.http import HttpResponse
 from ninja import Router
 import openpyxl
+from openpyxl.chart import LineChart, Reference, BarChart
+from openpyxl.chart.axis import DateAxis
 
 from django.db.models import Q, F
 from ninja.pagination import paginate, PageNumberPagination
@@ -125,7 +127,7 @@ def export_report_campaigns_data_to_excel(request, shopid: int, periodtype: int 
         sheet.append(
             [
                 obj.campaignname,
-                obj.effectdate,
+                obj.effectdate.strftime("%Y-%m") if periodtype == 1 else obj.effectdate,
                 obj.ctr,
                 obj.totalclick,
                 obj.totaladcost,
@@ -143,7 +145,42 @@ def export_report_campaigns_data_to_excel(request, shopid: int, periodtype: int 
             ]
         )
 
-    workbook.active = sheet
+    # TODO 创建 图表
+    chart_sheet = workbook.create_sheet("图表")
+    c1 = LineChart()
+    c1.title = "Line Chart"
+    c1.style = 2
+    c1.y_axis.title = "CTR"
+    c1.y_axis.axId = 100
+    c1.x_axis.title = "日期"
+
+    data = Reference(sheet, min_col=3, min_row=1, max_col=3, max_row=len(qs) + 1)
+    dates = Reference(sheet, min_col=2, min_row=2, max_row=len(qs) + 1)
+    c1.add_data(data, titles_from_data=True)
+    c1.set_categories(dates)
+
+    b1 = BarChart()
+    b1.y_axis.axId = 200
+    b1.y_axis.title = "クリック数(合計)"
+    data2 = Reference(sheet, min_col=4, max_col=4, min_row=1, max_row=len(qs) + 1)
+    b1.add_data(data2, titles_from_data=True)
+    b1.set_categories(dates)
+    b1.y_axis.crosses = "max"
+
+    c1 += b1
+
+    c1.width = 30
+    c1.height = 15
+
+    chart_sheet.add_chart(c1, "A2")
+
+    # from copy import deepcopy
+
+    # for style_number in range(1, 49):
+    #     c = deepcopy(c1)
+    #     c.style = style_number
+    #     sheet2 = workbook.create_sheet(f"{style_number}")
+    #     sheet2.add_chart(c, "A2")
 
     # 创建 HTTP 响应
     response = HttpResponse(
@@ -345,7 +382,7 @@ def export_report_keyword_data_to_excel(
         sheet.append(
             [
                 obj.itemurl,
-                obj.effectdate,
+                obj.effectdate.strftime("%Y-%m") if ptype == 1 else obj.effectdate,
                 obj.keywordstring,
                 obj.ctr,
                 obj.totalclicksvalid,
@@ -471,7 +508,7 @@ def export_report_products_data_to_excel(
         sheet.append(
             [
                 obj.itemurl,
-                obj.effectdate,
+                obj.effectdate.strftime("%Y-%m") if periodtype == 1 else obj.effectdate,
                 obj.ctr,
                 obj.totalclicksvalid,
                 obj.totaladsalesbeforediscount,
