@@ -31,7 +31,7 @@ _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
     auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
-def get_campaigns(request, shopid: int, periodtype: int = 1):
+def get_campaigns(request, shopid: int, periodtype: int = 1, sort: str = "-effectdate"):
     """
     获取指定 shopid 的 活动报表数据
     :param request:
@@ -43,7 +43,8 @@ def get_campaigns(request, shopid: int, periodtype: int = 1):
         query &= Q(periodtype=0) | Q(periodtype=2)
     else:
         query &= Q(periodtype=periodtype)
-    qs = ReportCampagns.objects.filter(query).order_by("-effectdate")
+    qs = ReportCampagns.objects.filter(query).order_by(sort)
+    print("campaigns....:===========")
     print(qs.query)
     return qs
 
@@ -248,6 +249,7 @@ def get_keywords_reports(
     kw: str = None,
     itemurl: str = None,
     ptype: int = 1,
+    sort: str = "-effectdate",
 ):
     """
     获取指定 shopid 的 关键词报表数据
@@ -264,7 +266,7 @@ def get_keywords_reports(
         query &= Q(keywordstring=kw)
     if itemurl:
         query &= Q(itemurl=itemurl)
-    qs = ReportKeywords.objects.filter(query).order_by("-effectdate")
+    qs = ReportKeywords.objects.filter(query).order_by(sort)
     print(qs.query)
 
     return qs
@@ -432,6 +434,7 @@ def get_products_reports(
     periodtype: int = 0,
     start: str = None,
     end: str = None,
+    sort: str = "-effectdate",
 ):
     """
     获取指定 shopid 的 商品报表数据
@@ -445,7 +448,7 @@ def get_products_reports(
         query &= Q(itemurl=itemurl)
     if start and end:
         query &= Q(effectdate__range=(start, end))
-    qs = ReportGoods.objects.filter(query).order_by("-effectdate")
+    qs = ReportGoods.objects.filter(query).order_by(sort)
     print(qs.query)
     return qs
 
