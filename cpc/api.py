@@ -1,11 +1,13 @@
 from typing import List, Any
 from django.conf import settings
+from django.http import HttpResponse
 from ninja import Router
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, F, Window
 from ninja.pagination import paginate, PageNumberPagination
 from django.db.models.functions import RowNumber, TruncHour, TruncDay
+import openpyxl
 
 
 from shares.models import (
@@ -380,6 +382,80 @@ def get_day_keywords_visit_datas(request, shopid: int, select_date: str, q: str 
     )
 
     return qs
+
+
+@router.get(
+    "/top_keywords/export/{int:shopid}/day",
+    tags=["top_five_keywords"],
+    auth=JWTAuth(),
+)
+def export_day_keywords_visit_datas(
+    request, shopid: int, select_date: str, q: str = ""
+):
+    query = Q(shopid=shopid)
+    query &= Q(term_end_date=select_date)
+    if q:
+        query &= Q(search_word__icontains=q) | Q(itemmngid__icontains=q)
+    """
+    获取 指定日期下的 top_keywords 表中的数据
+    """
+    qs = TopKeywords.objects.filter(query).order_by("itemmngid", "-search_word_visit")
+    print(qs.query)
+
+    # 创建一个新的工作簿
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+
+    # 写入表头
+    sheet.append(
+        [
+            "商品番号",
+            "日付",
+            "关键词",
+            "关键词转化率",
+            "关键词访问量",
+            "关键词乐天访问量",
+            "关键词排行",
+            "关键词乐天排行",
+            "总转化率",
+            "商品排行",
+            "访问量",
+            "总访问量",
+            "总订单量",
+            "关键词订单量",
+        ]
+    )
+
+    for obj in qs:
+        sheet.append(
+            [
+                obj.itemmngid,
+                obj.term_end_date,
+                obj.search_word,
+                obj.search_word_cvr,
+                obj.search_word_visit,
+                obj.search_word_ichiba_visit,
+                obj.search_word_rank,
+                obj.search_word_ichiba_rank,
+                obj.item_cvr_all,
+                obj.item_rank,
+                obj.item_visit,
+                obj.item_visit_all,
+                obj.item_order_count_all,
+                obj.search_word_order_count,
+            ]
+        )
+
+    workbook.active = sheet
+
+    # 创建 HTTP 响应
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="data.xlsx"'
+    workbook.save(response)
+
+    return response
 
 
 # =====================================================================
