@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:latest  # 指定 PostgreSQL 版本
+    container_name: graceful_postgres
+    restart: always     # 容器重启策略
+    environment:
+      POSTGRES_USER: gracefulRoot        # 数据库用户名
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # 用户密码（强密码）
+      POSTGRES_DB: gracefulmanager      # 默认数据库名
+    volumes:
+      - ./data/pgdata:/var/lib/postgresql/data
+      # - ./init-scripts:/docker-entrypoint-initdb.d  # 初始化脚本目录
+    ports:
+      - "5432:5432"    # 映射端口
+
+# volumes:
+#   pgdata:          # 定义数据卷，用于持久化数据

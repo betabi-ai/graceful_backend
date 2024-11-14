@@ -1,3 +1,9 @@
+停掉原来的django 项目：
+之前项目的管理都是通过 `/data/app/conf/supervisord.conf`文件进行。
+
+```sh
+/data/app/.envs/gracefulmonster/bin/supervisorctl -c /data/app/conf/supervisord.conf stop all
+```
 
 在项目的根目录下运行：`docker-compose build -d`, 可以直接将整个项目进行 docker 部署。
 
