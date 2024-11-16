@@ -7,6 +7,29 @@ SCHEDULE_URL = f"{settings.SCRAPYD_URL}/schedule.json"
 
 
 @shared_task()
+def handle_spider(**spider_args):
+    """
+    通用 爬虫任务
+    spider_args参数中必须要包括【project】和【spider】：spider_args: {
+        "project": "gracefulRakutenSpiders",
+        "spider": "cpc_goods_spider",
+        "shopid":"421947",
+    }
+    """
+    project = spider_args.get("project", None)
+    spider = spider_args.get("spider", None)
+    if not project or not spider:
+        return
+    # data = {"project": "gracefulRakutenSpiders", "spider": "cpc_goods_spider"}
+    # data.update(spider_args)
+    try:
+        response = requests.post(SCHEDULE_URL, data=spider_args)
+        return response.json()
+    except Exception as e:
+        print(e)
+
+
+@shared_task()
 def cpc_goods_spider_task(**spider_args):
     """
     执行 cpc_goods_spider 爬虫任务
