@@ -135,7 +135,7 @@ def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
             return 422, {"message": "已存在相同权重值的关键词"}
 
     update_data = {k: v for k, v in item.dict().items() if v is not None}
-    print(update_data)
+    # print(update_data)
     CpcGoodKeywords.objects.filter(id=item.id).update(**update_data)
 
     obj.refresh_from_db()
@@ -160,7 +160,7 @@ def get_keywords_rank_history_datas(
     end: str,
     dtype: str = "day",
 ):
-    print(".......")
+    # print(".......")
     query = Q(shopid=shopid)
     query &= Q(itemid=itemid)
     query &= Q(keyword=kw)
@@ -400,7 +400,7 @@ def export_day_keywords_visit_datas(
     获取 指定日期下的 top_keywords 表中的数据
     """
     qs = TopKeywords.objects.filter(query).order_by("itemmngid", "-search_word_visit")
-    print(qs.query)
+    # print(qs.query)
 
     # 创建一个新的工作簿
     workbook = openpyxl.Workbook()
@@ -500,7 +500,7 @@ def update_campaign_info(request, item: ShopCampagnsBudgetSEditchema):
     )
 
     update_data = {k: v for k, v in item.dict().items() if v is not None}
-    print(update_data)
+    # print(update_data)
     ShopCampagnsBudget.objects.filter(campaignid=item.campaignid).update(**update_data)
 
     obj.refresh_from_db()

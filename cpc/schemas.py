@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import Optional
 from ninja import ModelSchema, Schema
-from pydantic import Field, field_validator
+from pydantic import Field
 
 from shares.models import ShopCampagnsBudget, ShopCampagnsBudgetLog
 
