@@ -44,8 +44,8 @@ def get_campaigns(request, shopid: int, periodtype: int = 1, sort: str = "-effec
     else:
         query &= Q(periodtype=periodtype)
     qs = ReportCampagns.objects.filter(query).order_by(sort)
-    print("campaigns....:===========")
-    print(qs.query)
+    # print("campaigns....:===========")
+    # print(qs.query)
     return qs
 
 
@@ -229,7 +229,7 @@ def get_keywords_reports_by_con(
     if itemurl:
         query &= Q(itemurl=itemurl)
     qs = ReportKeywords.objects.filter(query).order_by("effectdate")
-    print(qs.query)
+    # print(qs.query)
 
     return qs
 
@@ -267,7 +267,7 @@ def get_keywords_reports(
     if itemurl:
         query &= Q(itemurl=itemurl)
     qs = ReportKeywords.objects.filter(query).order_by(sort)
-    print(qs.query)
+    # print(qs.query)
 
     return qs
 
@@ -287,7 +287,7 @@ def export_report_keyword_data_to_excel(
     itemurl: str = None,
     ptype: int = 1,
 ):
-    print("下载数据=======")
+    # print("下载数据=======")
     query = Q(shopid=shopid)
     query &= Q(periodtype=ptype)
     if start and end:
@@ -380,7 +380,7 @@ def export_report_keyword_data_to_excel(
     )
 
     for obj in qs:
-        print(obj.itemurl)
+        # print(obj.itemurl)
         sheet.append(
             [
                 obj.itemurl,
@@ -510,7 +510,7 @@ def export_report_products_data_to_excel(
     )
 
     for obj in qs:
-        print(obj.itemurl)
+        # print(obj.itemurl)
         sheet.append(
             [
                 obj.itemurl,
@@ -573,9 +573,9 @@ def get_products_reports_by_date(
     # if periodtype:
 
     qs = ReportGoods.objects.filter(query).order_by("effectdate")
-    print("************sssssss")
-    print(qs.query)
-    print(len(qs))
+    # print("************sssssss")
+    # print(qs.query)
+    # print(len(qs))
     return qs
 
 
