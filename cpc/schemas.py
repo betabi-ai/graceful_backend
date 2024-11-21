@@ -43,6 +43,7 @@ class CpcGoodKeywordsSchema(Schema):
     recommendationcpc: int
     weightvalue: int
     cpc_rank: int
+    cpc_calc_method: int
     cpc_rank_updatedat: datetime | None = None
     natural_rank: int
     natural_rank_updatedat: datetime | None = None
@@ -95,6 +96,7 @@ class CpcKeywordEnableChangeINSchema(Schema):
     cpc_desc: Optional[int] = None  # CPC竞价价格每次递减的值
     weightvalue: Optional[int] = None  # 权重值
     maxcpc: Optional[int] = None  # 最大CPC值
+    cpc_calc_method: Optional[int] = None  # cpc计算方法
 
 
 # 用于返回活动报表中的月份列表

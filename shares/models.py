@@ -41,6 +41,7 @@ class CpcGoodKeywords(models.Model):
     enabled_cpc = models.BooleanField(
         _l("是否启用CPC竞价"),
     )  # 是否启用CPC竞价计算逻辑功能
+    cpc_calc_method = models.IntegerField(_l("cpc计算的方法"), blank=True, null=True)
     is_deleted = models.BooleanField(
         _l("是否删除"),
     )  # 是否删除

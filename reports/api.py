@@ -449,7 +449,10 @@ def get_products_reports(
     if start and end:
         query &= Q(effectdate__range=(start, end))
     qs = ReportGoods.objects.filter(query).order_by(sort)
-    print(qs.query)
+    # print("&" * 50)
+    # print(qs.query)
+    # print("&" * 50)
+
     return qs
 
 
