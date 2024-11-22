@@ -147,5 +147,8 @@ class ShopCampagnsBudgetLogSEditchema(Schema):
 class KeywordsRankLogSchema(Schema):
     cpc: int
     recommendationcpc: int
-    rank: int
+    # rank: int
+    cpc_rank: int
+    item_rank: int
     created_at: datetime
+    # date_number: int

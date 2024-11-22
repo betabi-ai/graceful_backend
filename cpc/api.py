@@ -4,9 +4,20 @@ from django.http import HttpResponse
 from ninja import Router
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404
-from django.db.models import Q, F, Window
+from django.db.models import Q, F, Window, Value, IntegerField, ExpressionWrapper
 from ninja.pagination import paginate, PageNumberPagination
-from django.db.models.functions import RowNumber, TruncHour, TruncDay
+
+from django.db.models.functions import (
+    Concat,
+    ExtractYear,
+    ExtractMonth,
+    ExtractDay,
+    ExtractHour,
+    RowNumber,
+    TruncHour,
+    TruncDay,
+)
+
 import openpyxl
 
 
@@ -165,12 +176,34 @@ def get_keywords_rank_history_datas(
     query = Q(shopid=shopid)
     query &= Q(itemid=itemid)
     query &= Q(keyword=kw)
-    query &= Q(rank_type=ranktype)
+    # query &= Q(rank_type=ranktype)
     query &= Q(created_at__range=(start, end))
 
-    qs = (
-        CpcGoodKeywordsRankLog.objects.filter(query)
+    # 时间数字字段
+    if dtype == "day":
+        date_number_field = ExpressionWrapper(
+            Concat(
+                ExtractYear("created_at"),
+                ExtractMonth("created_at"),
+                ExtractDay("created_at"),
+            ),
+            output_field=IntegerField(),
+        )
+    elif dtype == "hour":
+        date_number_field = ExpressionWrapper(
+            Concat(
+                ExtractYear("created_at"),
+                ExtractMonth("created_at"),
+                ExtractDay("created_at"),
+                ExtractHour("created_at"),
+            ),
+            output_field=IntegerField(),
+        )
+
+    cpc_qs = (
+        CpcGoodKeywordsRankLog.objects.filter(query, rank_type="cpc")
         .annotate(
+            date_number=date_number_field,
             row_number=Window(
                 expression=RowNumber(),
                 partition_by=(
@@ -182,10 +215,43 @@ def get_keywords_rank_history_datas(
             ),
         )
         .filter(row_number=1)
+        .values("rank", "created_at", "cpc", "recommendationcpc", "date_number")
         .order_by("created_at")
     )
 
-    # print(qs.query)
+    item_qs = (
+        CpcGoodKeywordsRankLog.objects.filter(query, rank_type="item")
+        .annotate(
+            date_number=date_number_field,
+            row_number=Window(
+                expression=RowNumber(),
+                partition_by=(
+                    TruncHour("created_at")
+                    if dtype == "hour"
+                    else TruncDay("created_at")
+                ),
+                order_by=F("created_at").desc(),
+            ),
+        )
+        .filter(row_number=1)
+        .values("rank", "created_at", "date_number")
+        .order_by("created_at")
+    )
+
+    cpc_list = list(cpc_qs)
+    cpc_dict = {entry["date_number"]: entry for entry in cpc_list}
+    item_list = list(item_qs)
+    item_dict = {entry["date_number"]: entry for entry in item_list}
+
+    for c in cpc_dict:
+        cpc_dict[c].update(
+            {
+                "item_rank": item_dict.get(c, {}).get("rank", 0),
+                "cpc_rank": cpc_dict[c]["rank"],
+            }
+        )
+
+    qs = sorted(cpc_dict.values(), key=lambda x: x["date_number"])
     # print(qs)
 
     return qs
