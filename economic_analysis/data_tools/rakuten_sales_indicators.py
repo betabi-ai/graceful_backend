@@ -1,5 +1,6 @@
 import csv
 from datetime import date
+from shares.enums import DeviceType
 from shares.models import RakutenSalesIndicators
 
 skip_lines = 3
@@ -148,6 +149,7 @@ _COLUMNS_DICT = {
 
 
 def read_rakuten_sales_indicators():
+    # TODO 数据还有写死的
     with open(
         "/Users/kevincoder/Desktop/20241101_20241130_日次_店舗データ.csv", "r"
     ) as f:
@@ -178,18 +180,7 @@ def read_rakuten_sales_indicators():
                 mapped_row["effectdate"] = effectdate
                 mapped_row["shopid"] = "319134"
                 dates.append(effectdate)
-                devicetype = mapped_row["devicetype"]
-                match devicetype:
-                    case "すべて":
-                        mapped_row["devicetype"] = 10
-                    case "PC":
-                        mapped_row["devicetype"] = 20
-                    case "楽天市場アプリ":
-                        mapped_row["devicetype"] = 30
-                    case "スマートフォン":
-                        mapped_row["devicetype"] = 40
-                    case _:
-                        mapped_row["devicetype"] = 0
+                mapped_row["devicetype"] = DeviceType[mapped_row["devicetype"]].value
 
                 datas.append(RakutenSalesIndicators(**mapped_row))
 
