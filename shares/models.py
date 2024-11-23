@@ -224,3 +224,94 @@ class ShopCampagnsBudgetLog(models.Model):
     class Meta:
         managed = False
         db_table = "shop_campagns_budget_log"
+
+
+class RakutenSalesIndicators(models.Model):
+    shopid = models.CharField(max_length=20)
+    effectdate = models.DateField()
+    devicetype = models.IntegerField()
+    hgms = models.IntegerField(blank=True, null=True)
+    hcv = models.IntegerField(blank=True, null=True)
+    visit_count = models.IntegerField(blank=True, null=True)
+    ctr = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    avg_customer_price = models.IntegerField(blank=True, null=True)
+    unique_user_count = models.IntegerField(blank=True, null=True)
+    members = models.IntegerField(blank=True, null=True)
+    not_members = models.IntegerField(blank=True, null=True)
+    news = models.IntegerField(blank=True, null=True)
+    repeats = models.IntegerField(blank=True, null=True)
+    exclude_tax_amount = models.IntegerField(blank=True, null=True)
+    shipping_cost = models.IntegerField(blank=True, null=True)
+    shop_coupon_discount = models.IntegerField(blank=True, null=True)
+    rakuten_coupon_discount = models.IntegerField(blank=True, null=True)
+    free_shipping_coupon = models.IntegerField(blank=True, null=True)
+    gift_wrapping_fee = models.IntegerField(blank=True, null=True)
+    payment_fee = models.IntegerField(blank=True, null=True)
+    top10_avg_sales_amount = models.IntegerField(blank=True, null=True)
+    top10_avg_sales_count = models.IntegerField(blank=True, null=True)
+    top10_avg_visits = models.IntegerField(blank=True, null=True)
+    top10_avg_ctr = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    top10_avg_price = models.IntegerField(blank=True, null=True)
+    month_100_million_avg_amount = models.IntegerField(blank=True, null=True)
+    month_100_million_avg_count = models.IntegerField(blank=True, null=True)
+    month_100_million_avg_visits = models.IntegerField(blank=True, null=True)
+    month_100_million_avg_ctr = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    month_100_million_avg_price = models.IntegerField(blank=True, null=True)
+    month_30_million_avg_amount = models.IntegerField(blank=True, null=True)
+    month_30_million_avg_count = models.IntegerField(blank=True, null=True)
+    month_30_million_avg_visits = models.IntegerField(blank=True, null=True)
+    month_30_million_avg_ctr = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    month_30_million_avg_price = models.IntegerField(blank=True, null=True)
+    month_10_million_avg_amount = models.IntegerField(blank=True, null=True)
+    month_10_million_avg_count = models.IntegerField(blank=True, null=True)
+    month_10_million_avg_visits = models.IntegerField(blank=True, null=True)
+    month_10_million_avg_ctr = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    month_10_million_avg_price = models.IntegerField(blank=True, null=True)
+    month_million_avg_amount = models.IntegerField(blank=True, null=True)
+    month_million_avg_count = models.IntegerField(blank=True, null=True)
+    month_million_avg_visits = models.IntegerField(blank=True, null=True)
+    month_million_avg_ctr = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    month_million_avg_price = models.IntegerField(blank=True, null=True)
+    month_half_million_avg_amount = models.IntegerField(blank=True, null=True)
+    month_half_million_avg_count = models.IntegerField(blank=True, null=True)
+    month_half_million_avg_visits = models.IntegerField(blank=True, null=True)
+    month_half_million_avg_ctr = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    month_half_million_avg_price = models.IntegerField(blank=True, null=True)
+    month_less_avg_amount = models.IntegerField(blank=True, null=True)
+    month_less_avg_count = models.IntegerField(blank=True, null=True)
+    month_less_avg_visits = models.IntegerField(blank=True, null=True)
+    month_less_avg_ctr = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    month_less_avg_price = models.IntegerField(blank=True, null=True)
+    super_deal_amount = models.IntegerField(blank=True, null=True)
+    super_deal_count = models.IntegerField(blank=True, null=True)
+    super_deal_visits = models.IntegerField(blank=True, null=True)
+    super_deal_ctr = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    super_deal_price = models.IntegerField(blank=True, null=True)
+    super_deal_unique_visits = models.IntegerField(blank=True, null=True)
+    super_deal_members = models.IntegerField(blank=True, null=True)
+    super_deal_not_members = models.IntegerField(blank=True, null=True)
+    super_deal_news = models.IntegerField(blank=True, null=True)
+    super_deal_repeats = models.IntegerField(blank=True, null=True)
+    invest_point_amount = models.IntegerField(blank=True, null=True)
+    invest_point_count = models.IntegerField(blank=True, null=True)
+    invest_point_fee = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "rakuten_sales_indicators"
