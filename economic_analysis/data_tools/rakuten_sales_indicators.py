@@ -148,11 +148,9 @@ _COLUMNS_DICT = {
 }
 
 
-def read_rakuten_sales_indicators():
+def read_rakuten_sales_indicators(file_path, shopid):
     # TODO 数据还有写死的
-    with open(
-        "/Users/kevincoder/Desktop/20241101_20241130_日次_店舗データ.csv", "r"
-    ) as f:
+    with open(file_path, "r") as f:
 
         for _ in range(skip_lines):
             next(f)
@@ -185,11 +183,12 @@ def read_rakuten_sales_indicators():
                 datas.append(RakutenSalesIndicators(**mapped_row))
 
             RakutenSalesIndicators.objects.filter(
-                shopid="319134", effectdate__in=dates
+                shopid=shopid, effectdate__in=dates
             ).delete()
 
             RakutenSalesIndicators.objects.bulk_create(datas)
 
 
 if __name__ == "__main__":
-    read_rakuten_sales_indicators()
+    file_path = "/Users/kevincoder/Desktop/data/20241101_20241130_日次_店舗データ.csv"
+    # read_rakuten_sales_indicators()

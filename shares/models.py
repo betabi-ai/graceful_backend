@@ -315,3 +315,14 @@ class RakutenSalesIndicators(models.Model):
     class Meta:
         managed = False
         db_table = "rakuten_sales_indicators"
+
+
+class PointsAwarded(models.Model):
+    shopid = models.CharField(max_length=20)
+    pointsawarded = models.IntegerField()
+    effectdate = models.DateField()
+    numbers = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = "points_awarded"
