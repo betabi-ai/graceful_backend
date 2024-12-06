@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Any
 from django.conf import settings
 from itertools import groupby
@@ -204,13 +204,17 @@ def get_keywords_rank_history_datas(
     datas = {}
     for key, group in grouped_cpc_data:
         last = list(group)[-1]
+        # 需要手动设为京东时区
+        tokyo_timezone = timezone(timedelta(hours=9))
+        created_at = last.created_at.astimezone(tokyo_timezone)
+        # print(last.created_at, created_at)
         datas[key] = {
             "cpc": last.cpc,
             "recommendationcpc": last.recommendationcpc,
             "cpc_rank": last.rank,
             "item_rank": 0,
-            "created_at": last.created_at,
-            "effectdate": last.created_at.strftime(return_date_format),
+            "created_at": created_at,
+            "effectdate": created_at.strftime(return_date_format),
         }
 
     for key, group in grouped_item_data:
@@ -219,6 +223,8 @@ def get_keywords_rank_history_datas(
 
     datas = list(datas.values())
     datas.sort(key=lambda x: x["created_at"])
+
+    # print(datas)
 
     return datas
 
