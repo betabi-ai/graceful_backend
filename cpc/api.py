@@ -17,6 +17,7 @@ from django.db.models.functions import (
 import openpyxl
 
 
+from reports.models import ReportKeywords
 from shares.models import (
     CpcGoodKeywords,
     CpcGoodKeywordsRankLog,
@@ -215,11 +216,41 @@ def get_keywords_rank_history_datas(
             "item_rank": 0,
             "created_at": created_at,
             "effectdate": created_at.strftime(return_date_format),
+            "ctr": 0,
+            "total12hcvr": 0,
         }
 
     for key, group in grouped_item_data:
         last = list(group)[-1]
-        datas[key].update({"item_rank": last.rank})
+        if key in datas:
+            datas[key].update({"item_rank": last.rank})
+
+    if dtype == "day":
+        good_keywords = CpcGoodKeywords.objects.filter(
+            shopid=shopid, itemid=itemid, keyword=kw
+        ).first()
+
+        if good_keywords:
+            query2 = Q(shopid=shopid)
+            query2 &= Q(itemurl=good_keywords.itemmngid)
+            query2 &= Q(keywordstring=kw)
+            query2 &= Q(periodtype=0)
+            query2 &= Q(effectdate__range=(start, end_date))
+
+            report_keywords = ReportKeywords.objects.filter(query2).order_by(
+                "effectdate"
+            )
+
+            for report in report_keywords:
+                day_key = report.effectdate.strftime("%Y-%m-%d")
+                if day_key in datas:
+                    datas[day_key].update(
+                        {"total12hcvr": report.total12hcvr, "ctr": report.ctr}
+                    )
+
+        # print("===goodkeywords:", good_keywords)
+
+    # print(datas)
 
     datas = list(datas.values())
     datas.sort(key=lambda x: x["created_at"])
