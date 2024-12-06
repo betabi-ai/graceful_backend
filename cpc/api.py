@@ -1,5 +1,6 @@
 from typing import List, Any
 from django.conf import settings
+from itertools import groupby
 from django.http import HttpResponse
 from ninja import Router
 from django.db.models import Count, Sum
@@ -159,9 +160,7 @@ def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
     response=List[KeywordsRankLogSchema],
     tags=["cpc_keywords"],
     auth=JWTAuth(),
-    # auth=None,
 )
-# @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_keywords_rank_history_datas(
     request,
     shopid: int,
@@ -179,82 +178,46 @@ def get_keywords_rank_history_datas(
     # query &= Q(rank_type=ranktype)
     query &= Q(created_at__range=(start, end))
 
-    # 时间数字字段
     if dtype == "day":
-        date_number_field = ExpressionWrapper(
-            Concat(
-                ExtractYear("created_at"),
-                ExtractMonth("created_at"),
-                ExtractDay("created_at"),
-            ),
-            output_field=IntegerField(),
-        )
-    elif dtype == "hour":
-        date_number_field = ExpressionWrapper(
-            Concat(
-                ExtractYear("created_at"),
-                ExtractMonth("created_at"),
-                ExtractDay("created_at"),
-                ExtractHour("created_at"),
-            ),
-            output_field=IntegerField(),
-        )
+        groupby_date_format = "%Y-%m-%d"
+        return_date_format = groupby_date_format
+    else:
+        groupby_date_format = "%Y-%m-%d %H"
+        return_date_format = "%m-%d日%H时"
 
-    cpc_qs = (
-        CpcGoodKeywordsRankLog.objects.filter(query, rank_type="cpc")
-        .annotate(
-            date_number=date_number_field,
-            row_number=Window(
-                expression=RowNumber(),
-                partition_by=(
-                    TruncHour("created_at")
-                    if dtype == "hour"
-                    else TruncDay("created_at")
-                ),
-                order_by=F("created_at").desc(),
-            ),
-        )
-        .filter(row_number=1)
-        .values("rank", "created_at", "cpc", "recommendationcpc", "date_number")
-        .order_by("created_at")
+    qs = CpcGoodKeywordsRankLog.objects.filter(query).order_by("created_at")
+
+    cpc_datas = [item for item in qs if item.rank_type == "cpc"]
+    item_datas = [item for item in qs if item.rank_type == "item"]
+
+    grouped_cpc_data = groupby(
+        cpc_datas, key=lambda x: x.created_at.strftime(groupby_date_format)
     )
 
-    item_qs = (
-        CpcGoodKeywordsRankLog.objects.filter(query, rank_type="item")
-        .annotate(
-            date_number=date_number_field,
-            row_number=Window(
-                expression=RowNumber(),
-                partition_by=(
-                    TruncHour("created_at")
-                    if dtype == "hour"
-                    else TruncDay("created_at")
-                ),
-                order_by=F("created_at").desc(),
-            ),
-        )
-        .filter(row_number=1)
-        .values("rank", "created_at", "date_number")
-        .order_by("created_at")
+    grouped_item_data = groupby(
+        item_datas, key=lambda x: x.created_at.strftime(groupby_date_format)
     )
 
-    cpc_list = list(cpc_qs)
-    cpc_dict = {entry["date_number"]: entry for entry in cpc_list}
-    item_list = list(item_qs)
-    item_dict = {entry["date_number"]: entry for entry in item_list}
+    datas = {}
+    for key, group in grouped_cpc_data:
+        last = list(group)[-1]
+        datas[key] = {
+            "cpc": last.cpc,
+            "recommendationcpc": last.recommendationcpc,
+            "cpc_rank": last.rank,
+            "item_rank": 0,
+            "created_at": last.created_at,
+            "effectdate": last.created_at.strftime(return_date_format),
+        }
 
-    for c in cpc_dict:
-        cpc_dict[c].update(
-            {
-                "item_rank": item_dict.get(c, {}).get("rank", 0),
-                "cpc_rank": cpc_dict[c]["rank"],
-            }
-        )
+    for key, group in grouped_item_data:
+        last = list(group)[-1]
+        datas[key].update({"item_rank": last.rank})
 
-    qs = sorted(cpc_dict.values(), key=lambda x: x["date_number"])
-    # print(qs)
+    datas = list(datas.values())
+    datas.sort(key=lambda x: x["created_at"])
 
-    return qs
+    return datas
 
 
 # =====================================================================

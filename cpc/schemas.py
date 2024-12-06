@@ -150,5 +150,5 @@ class KeywordsRankLogSchema(Schema):
     # rank: int
     cpc_rank: int
     item_rank: int
-    created_at: datetime
+    effectdate: str
     # date_number: int
