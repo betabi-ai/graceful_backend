@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import List, Any
 from django.conf import settings
 from itertools import groupby
@@ -5,18 +6,12 @@ from django.http import HttpResponse
 from ninja import Router
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404
-from django.db.models import Q, F, Window, Value, IntegerField, ExpressionWrapper
+from django.db.models import Q, F, Window
 from ninja.pagination import paginate, PageNumberPagination
 
 from django.db.models.functions import (
-    Concat,
-    ExtractYear,
-    ExtractMonth,
-    ExtractDay,
-    ExtractHour,
     RowNumber,
     TruncHour,
-    TruncDay,
 )
 
 import openpyxl
@@ -176,7 +171,12 @@ def get_keywords_rank_history_datas(
     query &= Q(itemid=itemid)
     query &= Q(keyword=kw)
     # query &= Q(rank_type=ranktype)
-    query &= Q(created_at__range=(start, end))
+    end_date = datetime.strptime(end, "%Y-%m-%d")
+    end_date += timedelta(days=1)
+    end_date = end_date.strftime("%Y-%m-%d")
+    # print("=" * 50)
+    # print(end_date)
+    query &= Q(created_at__range=(start, end_date))
 
     if dtype == "day":
         groupby_date_format = "%Y-%m-%d"
@@ -186,6 +186,9 @@ def get_keywords_rank_history_datas(
         return_date_format = "%m-%d日%H时"
 
     qs = CpcGoodKeywordsRankLog.objects.filter(query).order_by("created_at")
+
+    if not qs.exists():
+        return []
 
     cpc_datas = [item for item in qs if item.rank_type == "cpc"]
     item_datas = [item for item in qs if item.rank_type == "item"]
