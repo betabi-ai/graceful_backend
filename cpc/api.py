@@ -1,21 +1,16 @@
+import openpyxl
 from datetime import datetime, timedelta, timezone
+from itertools import groupby
 from typing import List, Any
 from django.conf import settings
-from itertools import groupby
 from django.http import HttpResponse
-from ninja import Router
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, F, Window
+from django.db.models.functions import RowNumber, TruncHour
+from ninja import Router
 from ninja.pagination import paginate, PageNumberPagination
-
-from django.db.models.functions import (
-    RowNumber,
-    TruncHour,
-)
-
-import openpyxl
-
+from ninja_jwt.authentication import JWTAuth
 
 from reports.models import ReportKeywords
 from shares.models import (
@@ -38,9 +33,8 @@ from cpc.schemas import (
     ShopCampagnsBudgetSEditchema,
     ShopCampagnsBudgetSchema,
 )
-from ninja_jwt.authentication import JWTAuth
 
-router = Router()
+router = Router(auth=JWTAuth())
 
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
 
@@ -51,7 +45,6 @@ _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
     "/products/{int:shopid}",
     response=List[CpcProductsSchema],
     tags=["cpc_products"],
-    auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_cpc_products(request, shopid: int, q: str = None):
@@ -77,7 +70,6 @@ def get_cpc_products(request, shopid: int, q: str = None):
     "/keywords/{int:shopid}",
     response=List[CpcGoodKeywordsSchema],
     tags=["cpc_keywords"],
-    auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 # @paginate(CustomPagination)
@@ -86,6 +78,7 @@ def get_cpc_keywords_by_shopid(request, shopid: int, q: str = ""):
     获取指定shopid的CPC关键词
     """
 
+    # print(f"====user===: {request.user.id}, {type(request.user)}")
     query = Q(shopid=shopid)
     query &= Q(is_deleted=False)
     if q:
@@ -102,7 +95,6 @@ def get_cpc_keywords_by_shopid(request, shopid: int, q: str = ""):
     "/keywords/{int:shopid}/{str:itemmngid}",
     response=List[CpcGoodKeywordsSchema],
     tags=["cpc_keywords"],
-    auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
@@ -122,8 +114,6 @@ def get_cpc_keywords_by_itemmngid(request, shopid: int, itemmngid: str):
     "/keywords/checkenable",
     response={200: CpcGoodKeywordsSchema, 422: Message},
     tags=["cpc_keywords"],
-    auth=JWTAuth(),
-    # auth=None,
 )
 def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
     """
@@ -155,7 +145,6 @@ def update_goods_keywords(request, item: CpcKeywordEnableChangeINSchema):
     "/keywords/histories/{int:shopid}",
     response=List[KeywordsRankLogSchema],
     tags=["cpc_keywords"],
-    auth=JWTAuth(),
 )
 def get_keywords_rank_history_datas(
     request,
@@ -268,7 +257,6 @@ def get_keywords_rank_history_datas(
     "top_keywords/products/{int:shopid}",
     response=List[Any],
     tags=["top_five_keywords"],
-    auth=JWTAuth(),
 )
 def get_products_from_top_keywords(request, shopid: int, month: str = ""):
     """
@@ -295,7 +283,6 @@ def get_products_from_top_keywords(request, shopid: int, month: str = ""):
     "top_keywords/months/{int:shopid}",
     response=List[CampaignsMonthSchema],
     tags=["top_five_keywords"],
-    auth=JWTAuth(),
 )
 def get_months_from_top_keywords(request, shopid: int):
     """
@@ -325,7 +312,6 @@ def get_months_from_top_keywords(request, shopid: int):
     "/top_keywords",
     response=List[Any],
     tags=["top_five_keywords"],
-    auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_top_keywords_by_shopid(
@@ -381,9 +367,7 @@ def get_top_keywords_by_shopid(
     "/top_keywords/list",
     response=List[KeyValueTopKeywordsSchema],
     tags=["top_five_keywords"],
-    auth=None,
 )
-# @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_top_keywords_list(
     request,
     shopid: int,
@@ -420,7 +404,6 @@ def get_top_keywords_list(
     "/top_keywords/{int:shopid}/day",
     response=List[Any],
     tags=["top_five_keywords"],
-    auth=JWTAuth(),
 )
 @paginate(PageNumberPagination, page_size=150)
 def get_day_keywords_visit_datas(request, shopid: int, select_date: str, q: str = ""):
@@ -457,7 +440,6 @@ def get_day_keywords_visit_datas(request, shopid: int, select_date: str, q: str 
 @router.get(
     "/top_keywords/export/{int:shopid}/day",
     tags=["top_five_keywords"],
-    auth=JWTAuth(),
 )
 def export_day_keywords_visit_datas(
     request, shopid: int, select_date: str, q: str = ""
@@ -538,7 +520,6 @@ def export_day_keywords_visit_datas(
     "/shop_campaigns/{int:shopid}",
     response=List[ShopCampagnsBudgetSchema],
     tags=["shop_campaigns"],
-    auth=JWTAuth(),
 )
 def get_shop_campaigns(request, shopid: int):
     """
@@ -557,8 +538,6 @@ def get_shop_campaigns(request, shopid: int):
     "/shop_campaigns/edit",
     response={200: ShopCampagnsBudgetSchema, 422: Message},
     tags=["shop_campaigns"],
-    auth=JWTAuth(),
-    # auth=None,
 )
 def update_campaign_info(request, item: ShopCampagnsBudgetSEditchema):
     """
@@ -582,8 +561,6 @@ def update_campaign_info(request, item: ShopCampagnsBudgetSEditchema):
     # response=List[ShopCampagnsBudgetLogSchema],
     response=List[ShopCampagnsBudgetLogSchema],
     tags=["shop_campaigns"],
-    auth=JWTAuth(),
-    # auth=None,
 )
 def get_each_hour_campaign_infos(request, shopid: int, start: str, end: str):
 
