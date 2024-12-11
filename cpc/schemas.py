@@ -154,3 +154,18 @@ class KeywordsRankLogSchema(Schema):
     total12hcvr: float
     ctr: float
     # date_number: int
+
+
+class RakutenMonitorShopPagesSchema(Schema):
+    id: int
+    shop_id: str
+    item_id: str
+    item_url: str
+    item_img_url: str | None = None
+    is_monitor: bool
+
+
+class RakutenMonitorShopPagesEditchema(Schema):
+
+    id: int
+    is_monitor: Optional[bool] = None

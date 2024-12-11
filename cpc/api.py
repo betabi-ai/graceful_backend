@@ -11,12 +11,16 @@ from django.db.models.functions import RowNumber, TruncHour
 from ninja import Router
 from ninja.pagination import paginate, PageNumberPagination
 from ninja_jwt.authentication import JWTAuth
+from ninja.responses import Response
+from http import HTTPStatus
 
+from cpc.tasks import handle_spider
 from reports.models import ReportKeywords
 from shares.models import (
     CpcGoodKeywords,
     CpcGoodKeywordsRankLog,
     CpcKeywordsGoods,
+    RakutenMonitorShopPages,
     ShopCampagnsBudget,
     ShopCampagnsBudgetLog,
     TopKeywords,
@@ -29,6 +33,8 @@ from cpc.schemas import (
     KeyValueTopKeywordsSchema,
     KeywordsRankLogSchema,
     Message,
+    RakutenMonitorShopPagesEditchema,
+    RakutenMonitorShopPagesSchema,
     ShopCampagnsBudgetLogSchema,
     ShopCampagnsBudgetSEditchema,
     ShopCampagnsBudgetSchema,
@@ -586,3 +592,63 @@ def get_each_hour_campaign_infos(request, shopid: int, start: str, end: str):
 
 
 # =====================================================================
+
+
+# ===========================监测竞争对手商品=================================
+
+
+@router.get(
+    "/monitors",
+    response=List[RakutenMonitorShopPagesSchema],
+    tags=["monitors"],
+)
+def get_all_monitors(request):
+
+    qs = RakutenMonitorShopPages.objects.all().order_by("-is_monitor")
+
+    return qs
+
+
+@router.get(
+    "/monitors/add",
+    response=Any,
+    tags=["monitors"],
+)
+def get_monitor_by_url(request, item_url: str):
+
+    item = RakutenMonitorShopPages.objects.filter(item_url=item_url).first()
+
+    if not item:
+        # 改善添加请求
+        result = handle_spider(
+            project="gracefulRakutenSpiders",
+            spider="monitor_other_shop_spider",
+            url=item_url,
+        )
+        # print(result)
+        return Response({"id": -1}, status=HTTPStatus.OK)
+
+    # 动态获取所有字段
+    item_data = {field.name: getattr(item, field.name) for field in item._meta.fields}
+    return Response(item_data, status=HTTPStatus.OK)
+
+
+@router.patch(
+    "/monitors/edit",
+    response={200: RakutenMonitorShopPagesSchema, 422: Message},
+    tags=["monitors"],
+)
+def update_monitor(request, item: RakutenMonitorShopPagesEditchema):
+    """
+    更新：店铺活动预算信息
+    """
+    # print("========item:", item)
+    obj = get_object_or_404(RakutenMonitorShopPages, id=item.id)
+
+    # print(update_data)
+    RakutenMonitorShopPages.objects.filter(id=item.id).update(
+        is_monitor=item.is_monitor
+    )
+
+    obj.refresh_from_db()
+    return obj

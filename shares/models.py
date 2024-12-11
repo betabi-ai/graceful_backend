@@ -326,3 +326,16 @@ class PointsAwarded(models.Model):
     class Meta:
         managed = False
         db_table = "points_awarded"
+
+
+class RakutenMonitorShopPages(models.Model):
+    shop_id = models.CharField(max_length=20)
+    item_id = models.CharField(max_length=20)
+    item_url = models.CharField(unique=True, max_length=255)
+    item_img_url = models.CharField(blank=True, null=True, max_length=255)
+    is_monitor = models.BooleanField(blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "rakuten_monitor_shop_pages"
