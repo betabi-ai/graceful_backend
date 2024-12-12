@@ -20,7 +20,7 @@ from shares.models import (
     CpcGoodKeywords,
     CpcGoodKeywordsRankLog,
     CpcKeywordsGoods,
-    RakutenMonitorShopPages,
+    RakutenMonitorProducts,
     ShopCampagnsBudget,
     ShopCampagnsBudgetLog,
     TopKeywords,
@@ -33,8 +33,9 @@ from cpc.schemas import (
     KeyValueTopKeywordsSchema,
     KeywordsRankLogSchema,
     Message,
-    RakutenMonitorShopPagesEditchema,
-    RakutenMonitorShopPagesSchema,
+    RakutenMonitorProductsAddSchema,
+    RakutenMonitorProductsEditchema,
+    RakutenMonitorProductsSchema,
     ShopCampagnsBudgetLogSchema,
     ShopCampagnsBudgetSEditchema,
     ShopCampagnsBudgetSchema,
@@ -599,56 +600,53 @@ def get_each_hour_campaign_infos(request, shopid: int, start: str, end: str):
 
 @router.get(
     "/monitors",
-    response=List[RakutenMonitorShopPagesSchema],
+    response=List[RakutenMonitorProductsSchema],
     tags=["monitors"],
 )
 def get_all_monitors(request):
 
-    qs = RakutenMonitorShopPages.objects.all().order_by("-is_monitor")
+    qs = RakutenMonitorProducts.objects.all().order_by("-is_monitor")
 
     return qs
 
 
-@router.get(
+@router.post(
     "/monitors/add",
     response=Any,
     tags=["monitors"],
 )
-def get_monitor_by_url(request, item_url: str):
+def add_monitors(request, item: RakutenMonitorProductsAddSchema):
+    item_url = item.item_url
+    keywords = item.keywords
 
-    item = RakutenMonitorShopPages.objects.filter(item_url=item_url).first()
+    for keyword in keywords:
+        monitor = RakutenMonitorProducts.objects.filter(
+            item_url=item_url, keywords=keyword
+        ).first()
+        if not monitor:
+            RakutenMonitorProducts.objects.create(item_url=item_url, keywords=keyword)
 
-    if not item:
-        # 改善添加请求
-        result = handle_spider(
-            project="gracefulRakutenSpiders",
-            spider="monitor_other_shop_spider",
-            url=item_url,
-        )
-        # print(result)
-        return Response({"id": -1}, status=HTTPStatus.OK)
-
-    # 动态获取所有字段
-    item_data = {field.name: getattr(item, field.name) for field in item._meta.fields}
-    return Response(item_data, status=HTTPStatus.OK)
+    result = handle_spider(
+        project="gracefulRakutenSpiders",
+        spider="monitor_other_shop_spider",
+    )
+    return Response({"id": -1}, status=HTTPStatus.OK)
 
 
 @router.patch(
     "/monitors/edit",
-    response={200: RakutenMonitorShopPagesSchema, 422: Message},
+    response={200: RakutenMonitorProductsSchema, 422: Message},
     tags=["monitors"],
 )
-def update_monitor(request, item: RakutenMonitorShopPagesEditchema):
+def update_monitor(request, item: RakutenMonitorProductsEditchema):
     """
     更新：店铺活动预算信息
     """
     # print("========item:", item)
-    obj = get_object_or_404(RakutenMonitorShopPages, id=item.id)
+    obj = get_object_or_404(RakutenMonitorProducts, id=item.id)
 
     # print(update_data)
-    RakutenMonitorShopPages.objects.filter(id=item.id).update(
-        is_monitor=item.is_monitor
-    )
+    RakutenMonitorProducts.objects.filter(id=item.id).update(is_monitor=item.is_monitor)
 
     obj.refresh_from_db()
     return obj
@@ -663,6 +661,6 @@ def delete_monitor(request, item_id: int):
     """
     更新：店铺活动预算信息
     """
-    RakutenMonitorShopPages.objects.filter(id=item_id).delete()
+    RakutenMonitorProducts.objects.filter(id=item_id).delete()
 
     return {"message": "删除成功"}

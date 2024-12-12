@@ -328,14 +328,19 @@ class PointsAwarded(models.Model):
         db_table = "points_awarded"
 
 
-class RakutenMonitorShopPages(models.Model):
-    shop_id = models.CharField(max_length=20)
-    item_id = models.CharField(max_length=20)
+class RakutenMonitorProducts(models.Model):
+    shop_id = models.CharField(max_length=20, blank=True, null=True)
+    item_id = models.CharField(max_length=20, blank=True, null=True)
     item_url = models.CharField(unique=True, max_length=255)
-    item_img_url = models.CharField(blank=True, null=True, max_length=255)
-    is_monitor = models.BooleanField(blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
+    item_img_url = models.CharField(max_length=255, blank=True, null=True)
+    item_name = models.CharField(max_length=400, blank=True, null=True)
+    shop_name = models.CharField(max_length=100, blank=True, null=True)
+    price = models.IntegerField(blank=True, null=True)
+    item_number = models.CharField(max_length=100, blank=True, null=True)
+    keywords = models.CharField(unique=True, max_length=100, blank=True, null=True)
+    is_monitor = models.BooleanField(blank=True, null=True, default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         managed = False
-        db_table = "rakuten_monitor_shop_pages"
+        db_table = "rakuten_monitor_shops"

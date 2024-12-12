@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from typing import Optional
+from typing import List, Optional
 from ninja import ModelSchema, Schema
 from pydantic import Field
 
@@ -156,16 +156,26 @@ class KeywordsRankLogSchema(Schema):
     # date_number: int
 
 
-class RakutenMonitorShopPagesSchema(Schema):
+class RakutenMonitorProductsSchema(Schema):
     id: int
-    shop_id: str
-    item_id: str
+    shop_id: str | None = None
+    item_id: str | None = None
     item_url: str
     item_img_url: str | None = None
+    item_name: str | None = None
+    shop_name: str | None = None
+    price: int | None = None
+    item_number: str | None = None
+    keywords: str | None = None
     is_monitor: bool
 
 
-class RakutenMonitorShopPagesEditchema(Schema):
+class RakutenMonitorProductsEditchema(Schema):
 
     id: int
     is_monitor: Optional[bool] = None
+
+
+class RakutenMonitorProductsAddSchema(Schema):
+    item_url: str
+    keywords: List[str]
