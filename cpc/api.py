@@ -628,7 +628,7 @@ def add_monitors(request, item: RakutenMonitorProductsAddSchema):
 
     result = handle_spider(
         project="gracefulRakutenSpiders",
-        spider="monitor_other_shop_spider",
+        spider="rakuten_monitor_product_spider",
     )
     return Response({"id": -1}, status=HTTPStatus.OK)
 
