@@ -652,3 +652,17 @@ def update_monitor(request, item: RakutenMonitorShopPagesEditchema):
 
     obj.refresh_from_db()
     return obj
+
+
+@router.delete(
+    "/monitors/edit/{int:item_id}",
+    response=Message,
+    tags=["monitors"],
+)
+def delete_monitor(request, item_id: int):
+    """
+    更新：店铺活动预算信息
+    """
+    RakutenMonitorShopPages.objects.filter(id=item_id).delete()
+
+    return {"message": "删除成功"}
