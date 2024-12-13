@@ -344,3 +344,18 @@ class RakutenMonitorProducts(models.Model):
     class Meta:
         managed = False
         db_table = "rakuten_monitor_shops"
+
+
+class RakutenMonitorKeywordsRank(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    shopid = models.CharField(max_length=20)
+    itemid = models.CharField(max_length=20)
+    keyword = models.CharField(max_length=50)
+    rank = models.IntegerField()
+    rank_type = models.CharField(max_length=20)
+    order_no = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "rakuten_monitor_keywords_rank"

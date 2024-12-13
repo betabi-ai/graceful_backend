@@ -179,3 +179,11 @@ class RakutenMonitorProductsEditchema(Schema):
 class RakutenMonitorProductsAddSchema(Schema):
     item_url: str
     keywords: List[str]
+
+
+class RakutenMonitorKeywordsRankLogSchema(Schema):
+    # rank: int
+    cpc_rank: int
+    item_rank: int
+    effectdate: str
+    # date_number: int

@@ -20,6 +20,7 @@ from shares.models import (
     CpcGoodKeywords,
     CpcGoodKeywordsRankLog,
     CpcKeywordsGoods,
+    RakutenMonitorKeywordsRank,
     RakutenMonitorProducts,
     ShopCampagnsBudget,
     ShopCampagnsBudgetLog,
@@ -33,6 +34,7 @@ from cpc.schemas import (
     KeyValueTopKeywordsSchema,
     KeywordsRankLogSchema,
     Message,
+    RakutenMonitorKeywordsRankLogSchema,
     RakutenMonitorProductsAddSchema,
     RakutenMonitorProductsEditchema,
     RakutenMonitorProductsSchema,
@@ -604,10 +606,20 @@ def get_each_hour_campaign_infos(request, shopid: int, start: str, end: str):
     tags=["monitors"],
 )
 def get_all_monitors(request):
-
     qs = RakutenMonitorProducts.objects.all().order_by("-is_monitor")
 
     return qs
+
+
+@router.get(
+    "/monitors/{str:shop}/{str:item}",
+    response=List[RakutenMonitorProductsSchema],
+    tags=["monitors"],
+)
+def get_monitor_infe(request, shop: str, item: str):
+    info = RakutenMonitorProducts.objects.filter(shop_id=shop, item_id=item)
+
+    return info
 
 
 @router.post(
@@ -664,3 +676,77 @@ def delete_monitor(request, item_id: int):
     RakutenMonitorProducts.objects.filter(id=item_id).delete()
 
     return {"message": "删除成功"}
+
+
+@router.get(
+    "/monitors/histories",
+    response=List[RakutenMonitorKeywordsRankLogSchema],
+    tags=["monitors"],
+)
+def get_monitors_keywords_rank(
+    request,
+    shop: int,
+    item: str,
+    kw: str,
+    start: str,
+    end: str,
+    dtype: str = "day",
+):
+    # print(".......")
+    query = Q(shopid=shop)
+    query &= Q(itemid=item)
+    query &= Q(keyword=kw)
+    end_date = datetime.strptime(end, "%Y-%m-%d")
+    end_date += timedelta(days=1)
+    end_date = end_date.strftime("%Y-%m-%d")
+    query &= Q(created_at__range=(start, end_date))
+
+    if dtype == "day":
+        groupby_date_format = "%Y-%m-%d"
+        return_date_format = groupby_date_format
+    else:
+        groupby_date_format = "%Y-%m-%d %H"
+        return_date_format = "%m-%d日%H时"
+
+    qs = RakutenMonitorKeywordsRank.objects.filter(query).order_by("created_at")
+
+    if not qs.exists():
+        return []
+
+    cpc_datas = [item for item in qs if item.rank_type == "cpc"]
+    item_datas = [item for item in qs if item.rank_type == "item"]
+
+    grouped_cpc_data = groupby(
+        cpc_datas, key=lambda x: x.created_at.strftime(groupby_date_format)
+    )
+
+    grouped_item_data = groupby(
+        item_datas, key=lambda x: x.created_at.strftime(groupby_date_format)
+    )
+
+    datas = {}
+    for key, group in grouped_cpc_data:
+        last = list(group)[-1]
+        # 需要手动设为京东时区
+        tokyo_timezone = timezone(timedelta(hours=9))
+        created_at = last.created_at.astimezone(tokyo_timezone)
+        # print(last.created_at, created_at)
+        datas[key] = {
+            "cpc_rank": last.rank,
+            "item_rank": 0,
+            "created_at": created_at,
+            "effectdate": created_at.strftime(return_date_format),
+        }
+
+    for key, group in grouped_item_data:
+        last = list(group)[-1]
+        if key in datas:
+            datas[key].update({"item_rank": last.rank})
+
+    datas = list(datas.values())
+    datas.sort(key=lambda x: x["created_at"])
+
+    return datas
+
+
+# =====================================================================
