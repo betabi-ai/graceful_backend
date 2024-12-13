@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "shares",
     "cpc",
     "reports",
+    "data_management",
 ]
 
 MIDDLEWARE = [

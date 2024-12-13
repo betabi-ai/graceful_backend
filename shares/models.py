@@ -359,3 +359,48 @@ class RakutenMonitorKeywordsRank(models.Model):
     class Meta:
         managed = False
         db_table = "rakuten_monitor_keywords_rank"
+
+
+# 商品表model
+class Products(models.Model):
+    """
+    商品表model
+    """
+
+    itemid = models.CharField(max_length=50)
+    jan_code = models.CharField(max_length=20)
+    product_name = models.CharField(max_length=100)
+    bare_code = models.CharField(max_length=20, blank=True, null=True)
+    item_count = models.IntegerField(blank=True, null=True)
+    stock_quantity = models.IntegerField(blank=True, null=True)
+    compatible_models = models.CharField(max_length=100, blank=True, null=True)
+    attribute = models.CharField(max_length=100, blank=True, null=True)
+    status = models.IntegerField()
+    weight = models.DecimalField(max_digits=10, decimal_places=0, blank=True, null=True)
+    adapter_desc = models.CharField(max_length=30, blank=True, null=True)
+    box_properties_desc = models.CharField(max_length=30, blank=True, null=True)
+    notices_desc = models.CharField(max_length=100, blank=True, null=True)
+    packaging_desc = models.CharField(max_length=50, blank=True, null=True)
+    alcohol_pack_desc = models.CharField(max_length=30, blank=True, null=True)
+    supplier_id = models.IntegerField(blank=True, null=True)
+    supplier_name = models.CharField(max_length=100, blank=True, null=True)
+    min_order_quantity = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "products"
+
+
+# 供货商基本信息表 Model
+class ProductsSuppliers(models.Model):
+    """
+    供货商基本信息表 Model
+    """
+
+    supplier_name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "products_suppliers"
