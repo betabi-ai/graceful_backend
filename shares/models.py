@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext as _, gettext_lazy as _l
+from django.contrib.auth.models import User  # 导入 User 模型
 
 
 # CPC（点击付费）广告的优质关键词模型
@@ -363,29 +364,27 @@ class RakutenMonitorKeywordsRank(models.Model):
 
 # 商品表model
 class Products(models.Model):
-    """
-    商品表model
-    """
-
     itemid = models.CharField(max_length=50)
     jan_code = models.CharField(max_length=20)
-    product_name = models.CharField(max_length=100)
+    product_name = models.CharField(max_length=100, blank=True, null=True)
     bare_code = models.CharField(max_length=20, blank=True, null=True)
     item_count = models.IntegerField(blank=True, null=True)
     stock_quantity = models.IntegerField(blank=True, null=True)
-    compatible_models = models.CharField(max_length=100, blank=True, null=True)
-    attribute = models.CharField(max_length=100, blank=True, null=True)
+    compatible_models = models.CharField(max_length=200, blank=True, null=True)
+    attribute = models.CharField(max_length=200, blank=True, null=True)
     status = models.IntegerField()
-    weight = models.DecimalField(max_digits=10, decimal_places=0, blank=True, null=True)
-    adapter_desc = models.CharField(max_length=30, blank=True, null=True)
-    box_properties_desc = models.CharField(max_length=30, blank=True, null=True)
-    notices_desc = models.CharField(max_length=100, blank=True, null=True)
-    packaging_desc = models.CharField(max_length=50, blank=True, null=True)
-    alcohol_pack_desc = models.CharField(max_length=30, blank=True, null=True)
+    weight = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    adapter_desc = models.CharField(max_length=200, blank=True, null=True)
+    box_properties_desc = models.CharField(max_length=200, blank=True, null=True)
+    notices_desc = models.CharField(max_length=200, blank=True, null=True)
+    packaging_desc = models.CharField(max_length=200, blank=True, null=True)
+    alcohol_pack_desc = models.CharField(max_length=200, blank=True, null=True)
     supplier_id = models.IntegerField(blank=True, null=True)
-    supplier_name = models.CharField(max_length=100, blank=True, null=True)
     min_order_quantity = models.IntegerField(blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey(
+        User, on_delete=models.SET_DEFAULT, default=1, related_name="updated_by"
+    )
 
     class Meta:
         managed = False

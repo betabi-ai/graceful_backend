@@ -1,29 +1,32 @@
-from typing import List
+from typing import Any, List
 from django.db.models import Q
 from django.conf import settings
 from ninja import Router
 from ninja_jwt.authentication import JWTAuth
+
 from ninja.orm import create_schema
 from ninja.pagination import paginate, PageNumberPagination
 
-from data_management.schemas import ProductsSuppliersSchema
+from data_management.schemas import ProductsSuppliersSchema, ProductsUpsertSchema
 from shares.models import Products, ProductsSuppliers
 
 router = Router(auth=JWTAuth())
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
 
-ProductsSchema = create_schema(Products)
+ProductsSchema = create_schema(Products, exclude=["updated_by", "created_at"])
 
 
 # =========================== products =================================
 
 
-@router.get(
-    "/products", response=List[ProductsSchema], tags=["datas_management"], auth=None
-)
+@router.get("/products", response=List[ProductsSchema], tags=["datas_management"])
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_products(
-    request, q: str = "", sort: str = "-status", status: int = -1, supplier: str = "all"
+    request,
+    q: str = "",
+    sort: str = "status,created_at",
+    status: int = -1,
+    supplier: str = "all",
 ):
     query = Q()
     if q:
@@ -36,14 +39,32 @@ def get_products(
         query &= Q(status=status)
     if supplier and supplier != "all":
         query &= Q(supplier_id=supplier)
-    qs = Products.objects.filter(query)
+    if sort:
+        sorts = sort.split(",")
+    else:
+        sorts = ["status", "-created_at"]
+    qs = Products.objects.filter(query).order_by(*sorts)
 
-    return qs.order_by(sort)
+    return qs
+
+
+@router.post("/products/upsert", response=ProductsSchema, tags=["datas_management"])
+def upsert_product(request, data: ProductsUpsertSchema):
+
+    product = data.dict()
+    user = request.user
+    if user:
+        product["updated_by"] = user
+    product, _ = Products.objects.update_or_create(id=data.id, defaults=product)
+
+    return product
 
 
 # =========================== suppliers =================================
 
 
-@router.get("/suppliers", response=List[ProductsSuppliersSchema])
+@router.get(
+    "/suppliers", response=List[ProductsSuppliersSchema], tags=["datas_management"]
+)
 def get_all_products_suppliers(request):
     return ProductsSuppliers.objects.all()
