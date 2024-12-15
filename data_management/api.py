@@ -111,11 +111,7 @@ def get_gsone_jancodes(
     return qs
 
 
-@router.post(
-    "/gtins/upsert",
-    response=GtinCodeSchema,
-    tags=["datas_management"],
-)
+@router.post("/gtins/upsert", response=GtinCodeSchema, tags=["datas_management"])
 def relate_product_jan_code(request, data: GtinCodeInputSchema):
     # print(data)
     gs = GsoneJancode.objects.filter(gs_jancode=data.gs_jancode).first()
@@ -128,11 +124,7 @@ def relate_product_jan_code(request, data: GtinCodeInputSchema):
     return gs
 
 
-@router.post(
-    "/gtins/calc",
-    response={200: Any, 422: Any},
-    tags=["datas_management"],
-)
+@router.post("/gtins/calc", response={200: Any, 422: Any}, tags=["datas_management"])
 def calc_gtin_codes(request, data: CreateNewGtinCodeSchema):
     gs = GsoneJancode.objects.filter(gs_prefix=data.gs_prefix).first()
     if gs:
