@@ -44,3 +44,8 @@ class GtinCodeSchema(Schema):
     gs_jancode: str
     gs_index: int
     product_jancode: Optional[str]
+
+
+class GtinCodeInputSchema(Schema):
+    gs_jancode: str
+    product_jancode: str

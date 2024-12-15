@@ -8,6 +8,7 @@ from ninja.orm import create_schema
 from ninja.pagination import paginate, PageNumberPagination
 
 from data_management.schemas import (
+    GtinCodeInputSchema,
     GtinCodeSchema,
     ProductsSuppliersSchema,
     ProductsUpsertSchema,
@@ -93,9 +94,7 @@ def upsert_product(request, data: ProductsSuppliersSchema):
 # =========================== gsone_jancode =================================
 
 
-@router.get(
-    "/gtins", response=List[GtinCodeSchema], tags=["datas_management"], auth=None
-)
+@router.get("/gtins", response=List[GtinCodeSchema], tags=["datas_management"])
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_gsone_jancodes(
     request,
@@ -108,3 +107,20 @@ def get_gsone_jancodes(
     qs = GsoneJancode.objects.filter(query).order_by(sort)
 
     return qs
+
+
+@router.post(
+    "/gtins/upsert",
+    response=GtinCodeSchema,
+    tags=["datas_management"],
+)
+def relate_product_jan_code(request, data: GtinCodeInputSchema):
+    print(data)
+    gs = GsoneJancode.objects.filter(gs_jancode=data.gs_jancode).first()
+    if gs:
+        user = request.user
+        if user:
+            gs.updated_by = user
+        gs.product_jancode = data.product_jancode
+        gs.save()
+    return gs
