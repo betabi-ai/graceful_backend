@@ -46,6 +46,12 @@ class GtinCodeSchema(Schema):
     product_jancode: Optional[str]
 
 
+class CreateNewGtinCodeSchema(Schema):
+    gs_prefix: str
+    gs_start: int
+    gs_end: int
+
+
 class GtinCodeInputSchema(Schema):
     gs_jancode: str
     product_jancode: str
