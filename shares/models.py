@@ -436,3 +436,131 @@ class GsoneJancode(models.Model):
     class Meta:
         managed = False
         db_table = "gsone_jancode"
+
+
+# 进货清单表
+class PurchaseInfos(models.Model):
+    batch_code = models.CharField(unique=True, max_length=50)
+    status = models.IntegerField(blank=True, null=True)
+    exchange_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10, blank=True, null=True)
+    regist_date = models.DateField(blank=True, null=True)
+    transport_type = models.IntegerField(blank=True, null=True)
+    transport_company = models.CharField(max_length=100, blank=True, null=True)
+    updated_at = models.DateTimeField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="purchase_updated_by",
+    )
+
+    class Meta:
+        managed = False
+        db_table = "purchase_infos"
+
+
+# 进货详细表
+class PurchaseDetails(models.Model):
+    product_id = models.IntegerField()
+    purchase_batch_code = models.CharField(max_length=50)
+    quantity = models.IntegerField()
+    exchange_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10)
+    tax_form_code = models.CharField(max_length=30, blank=True, null=True)
+    tariff_rate = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    supplier_id = models.IntegerField()
+    supplier_name = models.CharField(max_length=100, blank=True, null=True)
+    bare_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    alcohol_bag_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    envelope = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    instruction_manual_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    adapter_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    packaging_box_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    plastic_packaging_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    scratch_card_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    wax_pager_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    lamination_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    labor_cost = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    packaging_bag_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    updated_at = models.DateTimeField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="purchase_detail_updated_by",
+    )
+
+    class Meta:
+        managed = False
+        db_table = "purchase_details"
+
+
+# 报关信息数据表
+class ProductCustomInfos(models.Model):
+    purchase_batch_code = models.CharField(max_length=50)
+    product_id = models.IntegerField()
+    chinese_name = models.CharField(max_length=50, blank=True, null=True)
+    english_name = models.CharField(max_length=50, blank=True, null=True)
+    material_chinese = models.CharField(max_length=20, blank=True, null=True)
+    material_english = models.CharField(max_length=20, blank=True, null=True)
+    product_usage = models.CharField(max_length=20, blank=True, null=True)
+    item_height = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    item_width = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    item_length = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    glass_area = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    logo = models.CharField(max_length=50, blank=True, null=True)
+    bare_log = models.CharField(max_length=50, blank=True, null=True)
+    customs_remark = models.CharField(max_length=200, blank=True, null=True)
+    updated_at = models.DateTimeField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="custom_updated_by",
+    )
+
+    class Meta:
+        managed = False
+        db_table = "product_custom_infos"

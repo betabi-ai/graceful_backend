@@ -13,9 +13,10 @@ from data_management.schemas import (
     GtinCodeSchema,
     ProductsSuppliersSchema,
     ProductsUpsertSchema,
+    PurchaseInfosSchema,
 )
 from data_management.tools import generate_gs_one_jancodes
-from shares.models import GsoneJancode, Products, ProductsSuppliers
+from shares.models import GsoneJancode, Products, ProductsSuppliers, PurchaseInfos
 
 router = Router(auth=JWTAuth())
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
@@ -146,3 +147,47 @@ def calc_gtin_codes(request, data: CreateNewGtinCodeSchema):
     return 200, {
         "message": "{data.gs_prefix}】9位数字的GTIN（JANコード）计算成功！！！"
     }
+
+
+# =========================== purchase_infos =================================
+
+
+@router.get("/purchases", response=List[PurchaseInfosSchema], tags=["datas_management"])
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
+def get_purchase_infos(
+    request,
+    sort: str = "-created_at",
+    status: int = -1,
+    q: str = "",
+):
+    query = Q()
+    if q:
+        query &= Q(batch_code__icontains=q)
+    if status != -1:
+        query &= Q(status=status)
+    qs = PurchaseInfos.objects.filter(query).order_by(sort)
+
+    return qs
+
+
+@router.post(
+    "/purchases/upsert",
+    response={200: PurchaseInfosSchema, 422: Any},
+    tags=["datas_management"],
+)
+def upsert_purchase_info(request, data: PurchaseInfosSchema):
+    query = ~Q(id=data.id)
+    query &= Q(batch_code=data.batch_code)
+    purchase = PurchaseInfos.objects.filter(query).first()
+    print(purchase)
+    if purchase:
+        return 422, {"message": "批次号不能重复！！！"}
+    purchase = data.dict()
+    user = request.user
+    if user:
+        purchase["updated_by"] = user
+    new_purchase, _ = PurchaseInfos.objects.update_or_create(
+        id=data.id, defaults=purchase
+    )
+
+    return 200, new_purchase

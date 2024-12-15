@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 from ninja import ModelSchema, Schema
 from pydantic import field_validator
@@ -55,3 +56,14 @@ class CreateNewGtinCodeSchema(Schema):
 class GtinCodeInputSchema(Schema):
     gs_jancode: str
     product_jancode: str
+
+
+class PurchaseInfosSchema(Schema):
+    id: Optional[int] = None
+    batch_code: str
+    status: int
+    exchange_rate: Optional[float] = None
+    currency: Optional[str] = None
+    regist_date: Optional[date] = None
+    transport_type: Optional[int] = None
+    transport_company: Optional[str] = None
