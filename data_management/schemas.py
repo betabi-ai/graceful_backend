@@ -7,6 +7,8 @@ from pydantic import field_validator
 class ProductsSuppliersSchema(Schema):
     id: Optional[int] = None
     supplier_name: str
+    contact: Optional[str] = None
+    contact_details: Optional[str] = None
 
 
 class ProductsUpsertSchema(Schema):

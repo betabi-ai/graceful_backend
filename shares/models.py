@@ -401,6 +401,8 @@ class ProductsSuppliers(models.Model):
     """
 
     supplier_name = models.CharField(max_length=100)
+    contact_details = models.CharField(max_length=100, blank=True, null=True)
+    contact = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_by = models.ForeignKey(
         User,
