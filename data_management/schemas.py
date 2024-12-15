@@ -37,3 +37,10 @@ class ProductsUpsertSchema(Schema):
         if value == "":
             return 0.0  # 或者返回 0.0
         return value
+
+
+class GtinCodeSchema(Schema):
+    gs_prefix: str
+    gs_jancode: str
+    gs_index: int
+    product_jancode: Optional[str]

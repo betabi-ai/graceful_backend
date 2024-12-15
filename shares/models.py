@@ -2,6 +2,8 @@ from django.db import models
 from django.utils.translation import gettext as _, gettext_lazy as _l
 from django.contrib.auth.models import User  # 导入 User 模型
 
+DEFAULT_USER_ID = 1
+
 
 # CPC（点击付费）广告的优质关键词模型
 class CpcGoodKeywords(models.Model):
@@ -386,7 +388,7 @@ class Products(models.Model):
     updated_by = models.ForeignKey(
         User,
         on_delete=models.SET_DEFAULT,
-        default=1,
+        default=DEFAULT_USER_ID,
         related_name="products_updated_by",
     )
 
@@ -408,10 +410,29 @@ class ProductsSuppliers(models.Model):
     updated_by = models.ForeignKey(
         User,
         on_delete=models.SET_DEFAULT,
-        default=1,
+        default=DEFAULT_USER_ID,
         related_name="supplier_updated_by",
     )
 
     class Meta:
         managed = False
         db_table = "products_suppliers"
+
+
+class GsoneJancode(models.Model):
+    gs_prefix = models.CharField(max_length=9)
+    gs_jancode = models.CharField(unique=True, max_length=13)
+    gs_index = models.IntegerField()
+    product_jancode = models.CharField(max_length=20, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField()
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="gtin_updated_by",
+    )
+
+    class Meta:
+        managed = False
+        db_table = "gsone_jancode"

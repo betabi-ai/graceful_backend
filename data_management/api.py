@@ -7,8 +7,12 @@ from ninja_jwt.authentication import JWTAuth
 from ninja.orm import create_schema
 from ninja.pagination import paginate, PageNumberPagination
 
-from data_management.schemas import ProductsSuppliersSchema, ProductsUpsertSchema
-from shares.models import Products, ProductsSuppliers
+from data_management.schemas import (
+    GtinCodeSchema,
+    ProductsSuppliersSchema,
+    ProductsUpsertSchema,
+)
+from shares.models import GsoneJancode, Products, ProductsSuppliers
 
 router = Router(auth=JWTAuth())
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
@@ -84,3 +88,23 @@ def upsert_product(request, data: ProductsSuppliersSchema):
     )
 
     return new_supplier
+
+
+# =========================== gsone_jancode =================================
+
+
+@router.get(
+    "/gtins", response=List[GtinCodeSchema], tags=["datas_management"], auth=None
+)
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
+def get_gsone_jancodes(
+    request,
+    sort: str = "gs_jancode",
+    q: str = "",
+):
+    query = Q()
+    if q:
+        query &= Q(gs_jancode__icontains=q) | Q(product_jancode__icontains=q)
+    qs = GsoneJancode.objects.filter(query).order_by(sort)
+
+    return qs
