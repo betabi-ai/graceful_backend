@@ -367,6 +367,7 @@ class Products(models.Model):
     itemid = models.CharField(max_length=50)
     jan_code = models.CharField(max_length=20)
     product_name = models.CharField(max_length=100, blank=True, null=True)
+    gtin_code = models.CharField(max_length=13, blank=True, null=True)
     bare_code = models.CharField(max_length=20, blank=True, null=True)
     item_count = models.IntegerField(blank=True, null=True)
     stock_quantity = models.IntegerField(blank=True, null=True)
