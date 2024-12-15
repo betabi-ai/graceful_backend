@@ -112,8 +112,17 @@ def get_gsone_jancodes(
     return qs
 
 
-@router.post("/gtins/upsert", response=GtinCodeSchema, tags=["datas_management"])
+@router.post(
+    "/gtins/upsert", response={200: GtinCodeSchema, 422: Any}, tags=["datas_management"]
+)
 def relate_product_jan_code(request, data: GtinCodeInputSchema):
+
+    gj = GsoneJancode.objects.filter(product_jancode=data.product_jancode).first()
+    if gj:
+        return 422, {
+            "message": f"商品JANコード【{data.product_jancode}】，已与【{data.gs_jancode}】进行了绑定！！！"
+        }
+
     # print(data)
     gs = GsoneJancode.objects.filter(gs_jancode=data.gs_jancode).first()
     if gs:
@@ -122,7 +131,7 @@ def relate_product_jan_code(request, data: GtinCodeInputSchema):
             gs.updated_by = user
         gs.product_jancode = data.product_jancode
         gs.save()
-    return gs
+    return 200, gs
 
 
 @router.post("/gtins/calc", response={200: Any, 422: Any}, tags=["datas_management"])
