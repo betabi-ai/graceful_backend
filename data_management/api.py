@@ -55,9 +55,9 @@ def upsert_product(request, data: ProductsUpsertSchema):
     user = request.user
     if user:
         product["updated_by"] = user
-    product, _ = Products.objects.update_or_create(id=data.id, defaults=product)
+    new_product, _ = Products.objects.update_or_create(id=data.id, defaults=product)
 
-    return product
+    return new_product
 
 
 # =========================== suppliers =================================
@@ -68,3 +68,19 @@ def upsert_product(request, data: ProductsUpsertSchema):
 )
 def get_all_products_suppliers(request):
     return ProductsSuppliers.objects.all()
+
+
+@router.post(
+    "/suppliers/upsert", response=ProductsSuppliersSchema, tags=["datas_management"]
+)
+def upsert_product(request, data: ProductsSuppliersSchema):
+
+    supplier = data.dict()
+    user = request.user
+    if user:
+        supplier["updated_by"] = user
+    new_supplier, _ = ProductsSuppliers.objects.update_or_create(
+        id=data.id, defaults=supplier
+    )
+
+    return new_supplier

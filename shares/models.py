@@ -383,7 +383,10 @@ class Products(models.Model):
     min_order_quantity = models.IntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_by = models.ForeignKey(
-        User, on_delete=models.SET_DEFAULT, default=1, related_name="updated_by"
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=1,
+        related_name="products_updated_by",
     )
 
     class Meta:
@@ -398,7 +401,13 @@ class ProductsSuppliers(models.Model):
     """
 
     supplier_name = models.CharField(max_length=100)
-    created_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=1,
+        related_name="supplier_updated_by",
+    )
 
     class Meta:
         managed = False

@@ -5,7 +5,7 @@ from pydantic import field_validator
 
 # Create your models here.
 class ProductsSuppliersSchema(Schema):
-    id: int
+    id: Optional[int] = None
     supplier_name: str
 
 
