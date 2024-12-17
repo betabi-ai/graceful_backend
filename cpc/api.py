@@ -605,8 +605,22 @@ def get_each_hour_campaign_infos(request, shopid: int, start: str, end: str):
     response=List[RakutenMonitorProductsSchema],
     tags=["monitors"],
 )
-def get_all_monitors(request):
-    qs = RakutenMonitorProducts.objects.all().order_by("-is_monitor")
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
+def get_all_monitors(
+    request,
+    sort: str = "-is_monitor",
+    q: str = "",
+):
+    print(q)
+    query = Q()
+    if q:
+        query &= (
+            Q(item_url__icontains=q)
+            | Q(keywords__icontains=q)
+            | Q(shop_name__icontains=q)
+        )
+
+    qs = RakutenMonitorProducts.objects.filter(query).order_by(sort)
 
     return qs
 
