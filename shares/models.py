@@ -464,17 +464,17 @@ class PurchaseInfos(models.Model):
 
 # 进货详细表
 class PurchaseDetails(models.Model):
+    jan_code = models.CharField(max_length=20)
     product_id = models.IntegerField()
-    purchase_batch_code = models.CharField(max_length=50)
+    purchase_id = models.IntegerField()
+    batch_code = models.CharField(max_length=50)
     quantity = models.IntegerField()
     exchange_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.CharField(max_length=10)
     tax_form_code = models.CharField(max_length=30, blank=True, null=True)
     tariff_rate = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
     )
-    supplier_id = models.IntegerField()
-    supplier_name = models.CharField(max_length=100, blank=True, null=True)
+    supplier_id = models.IntegerField(blank=True, null=True)
     bare_price = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
     )
@@ -511,15 +511,14 @@ class PurchaseDetails(models.Model):
     packaging_bag_price = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
     )
-    updated_at = models.DateTimeField()
-
-    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(blank=True, null=True)
     updated_by = models.ForeignKey(
         User,
         on_delete=models.SET_DEFAULT,
         default=DEFAULT_USER_ID,
         related_name="purchase_detail_updated_by",
     )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         managed = False

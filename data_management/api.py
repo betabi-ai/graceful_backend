@@ -13,10 +13,17 @@ from data_management.schemas import (
     GtinCodeSchema,
     ProductsSuppliersSchema,
     ProductsUpsertSchema,
+    PurchaseDetailsUpsertInputSchema,
     PurchaseInfosSchema,
 )
 from data_management.tools import generate_gs_one_jancodes
-from shares.models import GsoneJancode, Products, ProductsSuppliers, PurchaseInfos
+from shares.models import (
+    GsoneJancode,
+    Products,
+    ProductsSuppliers,
+    PurchaseDetails,
+    PurchaseInfos,
+)
 
 router = Router(auth=JWTAuth())
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
@@ -54,6 +61,18 @@ def get_products(
     qs = Products.objects.filter(query).order_by(*sorts)
 
     return qs
+
+
+@router.get("/products/all", response=List[Any], tags=["datas_management"])
+def get_all_products(request):
+    return Products.objects.filter().values(
+        "id", "jan_code", "itemid", "product_name", "supplier_id"
+    )
+
+
+@router.get("/products/info", response=ProductsSchema, tags=["datas_management"])
+def get_product_with_jancode(request, jancode: str):
+    return Products.objects.filter(jan_code=jancode).first()
 
 
 @router.post("/products/upsert", response=ProductsSchema, tags=["datas_management"])
@@ -179,6 +198,34 @@ def get_purchase_infos(
     return qs
 
 
+@router.get(
+    "/purchases/{int:purchase_id}",
+    response=PurchaseInfosSchema,
+    tags=["datas_management"],
+)
+def get_purchase_info_with_id(request, purchase_id: int):
+
+    return PurchaseInfos.objects.filter(id=purchase_id).first()
+
+
+@router.get(
+    "/purchases/details",
+    response=List[PurchaseDetailsUpsertInputSchema],
+    tags=["datas_management"],
+)
+def get_purchase_details(request, pid: int):
+    return PurchaseDetails.objects.filter(purchase_id=pid)
+
+
+@router.get(
+    "/purchases/detail/{int:id}",
+    response=PurchaseDetailsUpsertInputSchema,
+    tags=["datas_management"],
+)
+def get_purchase_detail_info(request, id: int):
+    return PurchaseDetails.objects.filter(id=id).first()
+
+
 @router.post(
     "/purchases/upsert",
     response={200: PurchaseInfosSchema, 422: Any},
@@ -200,3 +247,22 @@ def upsert_purchase_info(request, data: PurchaseInfosSchema):
     )
 
     return 200, new_purchase
+
+
+# =========================== purchase_details =================================
+
+
+@router.post(
+    "/purchases/product/upsert",
+    response=PurchaseDetailsUpsertInputSchema,
+    tags=["datas_management"],
+)
+def upsert_purchase_product(request, data: PurchaseDetailsUpsertInputSchema):
+    info = data.dict()
+    user = request.user
+    if user:
+        info["updated_by"] = user
+    new_info, _ = PurchaseDetails.objects.update_or_create(id=data.id, defaults=info)
+    print(new_info)
+
+    return new_info
