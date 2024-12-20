@@ -13,6 +13,7 @@ from data_management.schemas import (
     GtinCodeSchema,
     ProductsSuppliersSchema,
     ProductsUpsertSchema,
+    PurchaseCustomSchema,
     PurchaseDetailsUpsertInputSchema,
     PurchaseInfosSchema,
 )
@@ -279,8 +280,25 @@ def upsert_purchase_product(request, data: PurchaseDetailsUpsertInputSchema):
 # =========================== product_custom_infos =================================
 
 
-@router.get("/purchases/customs", response=List[Any], tags=["datas_management"])
-def get_product_custom_infos(request, pid: int):
+@router.get(
+    "/purchases/customs", response=List[PurchaseCustomSchema], tags=["datas_management"]
+)
+def get_purchase_custom_infos(request, pid: int):
     qs = ProductCustomInfos.objects.filter(purchase_id=pid)
 
     return qs
+
+
+@router.post(
+    "/purchases/custom/upsert",
+    response={200: PurchaseCustomSchema, 422: Any},
+    tags=["datas_management"],
+)
+def upsert_purchase_custom_info(request, data: PurchaseCustomSchema):
+    info = data.dict()
+    user = request.user
+    if user:
+        info["updated_by"] = user
+    new_info, _ = ProductCustomInfos.objects.update_or_create(id=data.id, defaults=info)
+
+    return 200, new_info

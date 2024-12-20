@@ -92,3 +92,23 @@ class PurchaseDetailsUpsertInputSchema(Schema):
     lamination_price: Optional[float] = None
     labor_cost: Optional[float] = None
     packaging_bag_price: Optional[float] = None
+
+
+class PurchaseCustomSchema(Schema):
+    id: Optional[int] = None
+    product_id: int
+    purchase_id: int
+    jan_code: str
+    batch_code: str
+    chinese_name: Optional[str] = None
+    english_name: Optional[str] = None
+    material_chinese: Optional[str] = None
+    material_english: Optional[str] = None
+    product_usage: Optional[str] = None
+    item_height: Optional[float] = None
+    item_width: Optional[float] = None
+    item_length: Optional[float] = None
+    glass_area: Optional[float] = None
+    logo: Optional[str] = None
+    bare_log: Optional[str] = None
+    customs_remark: Optional[str] = None
