@@ -19,6 +19,7 @@ from data_management.schemas import (
 from data_management.tools import generate_gs_one_jancodes
 from shares.models import (
     GsoneJancode,
+    ProductCustomInfos,
     Products,
     ProductsSuppliers,
     PurchaseDetails,
@@ -143,6 +144,7 @@ def relate_product_jan_code(request, data: GtinCodeInputSchema):
         }
 
     # print(data)
+
     gs = GsoneJancode.objects.filter(gs_jancode=data.gs_jancode).first()
     if gs:
         user = request.user
@@ -150,6 +152,12 @@ def relate_product_jan_code(request, data: GtinCodeInputSchema):
             gs.updated_by = user
         gs.product_jancode = data.product_jancode
         gs.save()
+
+    product = Products.objects.filter(jan_code=data.product_jancode).first()
+
+    if product:
+        product.gtin_code = data.gs_jancode
+        product.save()
     return 200, gs
 
 
@@ -263,6 +271,16 @@ def upsert_purchase_product(request, data: PurchaseDetailsUpsertInputSchema):
     if user:
         info["updated_by"] = user
     new_info, _ = PurchaseDetails.objects.update_or_create(id=data.id, defaults=info)
-    print(new_info)
+    # print(new_info)
 
     return new_info
+
+
+# =========================== product_custom_infos =================================
+
+
+@router.get("/purchases/customs", response=List[Any], tags=["datas_management"])
+def get_product_custom_infos(request, pid: int):
+    qs = ProductCustomInfos.objects.filter(purchase_id=pid)
+
+    return qs

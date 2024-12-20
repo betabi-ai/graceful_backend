@@ -525,10 +525,12 @@ class PurchaseDetails(models.Model):
         db_table = "purchase_details"
 
 
-# 报关信息数据表
+# 海关报关信息表 Model
 class ProductCustomInfos(models.Model):
-    purchase_batch_code = models.CharField(max_length=50)
+    purchase_id = models.IntegerField()
+    batch_code = models.CharField(max_length=50)
     product_id = models.IntegerField()
+    jan_code = models.CharField(max_length=20)
     chinese_name = models.CharField(max_length=50, blank=True, null=True)
     english_name = models.CharField(max_length=50, blank=True, null=True)
     material_chinese = models.CharField(max_length=20, blank=True, null=True)
@@ -549,16 +551,15 @@ class ProductCustomInfos(models.Model):
     logo = models.CharField(max_length=50, blank=True, null=True)
     bare_log = models.CharField(max_length=50, blank=True, null=True)
     customs_remark = models.CharField(max_length=200, blank=True, null=True)
-    updated_at = models.DateTimeField()
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
     updated_by = models.ForeignKey(
         User,
         on_delete=models.SET_DEFAULT,
         default=DEFAULT_USER_ID,
         related_name="custom_updated_by",
     )
+    updated_at = models.DateTimeField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         managed = False
