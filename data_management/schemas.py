@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 from ninja import ModelSchema, Schema
 from pydantic import field_validator
 
@@ -112,3 +112,8 @@ class PurchaseCustomSchema(Schema):
     logo: Optional[str] = None
     bare_log: Optional[str] = None
     customs_remark: Optional[str] = None
+
+
+class JancodeParentChildMappingListSchema(Schema):
+    parent_code: str
+    child_codes: List[str]

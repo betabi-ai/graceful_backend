@@ -564,3 +564,20 @@ class ProductCustomInfos(models.Model):
     class Meta:
         managed = False
         db_table = "product_custom_infos"
+
+
+class JancodeParentChildMapping(models.Model):
+    parent_jancode = models.CharField(max_length=20)
+    child_jancode = models.CharField(max_length=20)
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="jancode_mapping_updated_by",
+    )
+    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = "jancode_parent_child_mapping"

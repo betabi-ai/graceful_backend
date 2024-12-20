@@ -11,6 +11,7 @@ from data_management.schemas import (
     CreateNewGtinCodeSchema,
     GtinCodeInputSchema,
     GtinCodeSchema,
+    JancodeParentChildMappingListSchema,
     ProductsSuppliersSchema,
     ProductsUpsertSchema,
     PurchaseCustomSchema,
@@ -20,6 +21,7 @@ from data_management.schemas import (
 from data_management.tools import generate_gs_one_jancodes
 from shares.models import (
     GsoneJancode,
+    JancodeParentChildMapping,
     ProductCustomInfos,
     Products,
     ProductsSuppliers,
@@ -302,3 +304,45 @@ def upsert_purchase_custom_info(request, data: PurchaseCustomSchema):
     new_info, _ = ProductCustomInfos.objects.update_or_create(id=data.id, defaults=info)
 
     return 200, new_info
+
+
+# =========================== jancode_parent_child_mapping =================================
+
+
+@router.get(
+    "/jancode/parent-child",
+    response=List[JancodeParentChildMappingListSchema],
+    tags=["datas_management"],
+    auth=None,
+)
+def get_jancode_parent_child_mapping(request, q: str = ""):
+    query = Q()
+    # 检查参数
+    if q:
+        # 查询条件：匹配 parent_jancode 或 child_jancode
+        query = Q(parent_jancode__icontains=q) | Q(child_jancode__icontains=q)
+
+    relationships = (
+        JancodeParentChildMapping.objects.filter(query)
+        .values("parent_jancode")
+        .distinct()
+    )
+
+    if relationships.exists():
+        parent_codes = [rel["parent_jancode"] for rel in relationships]
+        result = []
+
+        for parent_code in parent_codes:
+            children = JancodeParentChildMapping.objects.filter(
+                parent_jancode=parent_code
+            ).values_list("child_jancode", flat=True)
+            result.append(
+                {
+                    "parent_code": parent_code,
+                    "child_codes": list(children),
+                }
+            )
+
+        return result
+
+    return []
