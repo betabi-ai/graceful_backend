@@ -575,7 +575,6 @@ class JancodeParentChildMapping(models.Model):
         default=DEFAULT_USER_ID,
         related_name="jancode_mapping_updated_by",
     )
-    updated_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -365,9 +365,16 @@ def upsert_jancode_parent_child_mapping(
 
     parent_code = data.parent_code
     JancodeParentChildMapping.objects.filter(parent_jancode=parent_code).delete()
-    for child_code in data.child_codes:
-        JancodeParentChildMapping.objects.create(
-            parent_jancode=parent_code, child_jancode=child_code
-        )
+    user = request.user
 
-    return {"message": "更新成功！！！"}
+    for child_code in data.child_codes:
+        if user:
+            JancodeParentChildMapping.objects.create(
+                parent_jancode=parent_code, child_jancode=child_code, updated_by=user
+            )
+        else:
+            JancodeParentChildMapping.objects.create(
+                parent_jancode=parent_code, child_jancode=child_code
+            )
+
+    return {"message": "操作成功！！！"}
