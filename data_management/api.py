@@ -1,11 +1,17 @@
+import csv
+from io import StringIO
 from typing import Any, List
 from django.db.models import Q
 from django.conf import settings
-from ninja import Router
-from ninja_jwt.authentication import JWTAuth
 
+from ninja import Router, File
+from ninja_jwt.authentication import JWTAuth
+from ninja.files import UploadedFile
 from ninja.orm import create_schema
 from ninja.pagination import paginate, PageNumberPagination
+
+
+from data_management.tools import generate_gs_one_jancodes
 
 from data_management.schemas import (
     CreateNewGtinCodeSchema,
@@ -18,7 +24,6 @@ from data_management.schemas import (
     PurchaseDetailsUpsertInputSchema,
     PurchaseInfosSchema,
 )
-from data_management.tools import generate_gs_one_jancodes
 from shares.models import (
     GsoneJancode,
     JancodeParentChildMapping,
@@ -367,6 +372,21 @@ def upsert_jancode_parent_child_mapping(
     JancodeParentChildMapping.objects.filter(parent_jancode=parent_code).delete()
     user = request.user
 
+    update_or_create_jancode_parent_child_mapping(data, user)
+
+    return {"message": "操作成功！！！"}
+
+
+def update_or_create_jancode_parent_child_mapping(
+    data: JancodeParentChildMappingListSchema, user=None
+):
+    """
+    批量新增或更新 parent_code 的子 code 映射关系
+    """
+
+    parent_code = data.parent_code
+    JancodeParentChildMapping.objects.filter(parent_jancode=parent_code).delete()
+
     for child_code in data.child_codes:
         if user:
             JancodeParentChildMapping.objects.create(
@@ -377,4 +397,45 @@ def upsert_jancode_parent_child_mapping(
                 parent_jancode=parent_code, child_jancode=child_code
             )
 
-    return {"message": "操作成功！！！"}
+
+@router.post(
+    "/jancode/parent-child/upload",
+    response={200: Any, 422: Any},
+    tags=["datas_management"],
+)
+def upload_jancode_parent_child_mapping_file(request, file: UploadedFile = File(...)):
+    """
+    上传 parent_code 的子 code 映射关系文件
+    """
+    try:
+        # 读取并解码文件内容
+        file_content = file.read().decode("utf-8")
+        csv_reader = csv.DictReader(StringIO(file_content))
+
+        # 检查文件是否包含必要字段
+        required_fields = {"parent_code", "child_code"}
+        if not required_fields.issubset(csv_reader.fieldnames):
+            missing_fields = required_fields - set(csv_reader.fieldnames or [])
+            return 422, {"message": f"缺少必要字段: {', '.join(missing_fields)}"}
+
+        # 解析并处理数据
+        user = request.user
+        for row in csv_reader:
+            # 去除空行
+            if not any(row.values()):
+                continue
+
+            update_or_create_jancode_parent_child_mapping(
+                JancodeParentChildMappingListSchema(
+                    parent_code=row["parent_code"],
+                    child_codes=row["child_code"].split("X"),
+                ),
+                user,
+            )
+
+        return 200, {"message": f"上传成功！！！"}
+
+    except UnicodeDecodeError:
+        return 422, {"message": "文件解码失败，请确保文件是 UTF-8 编码"}
+    except Exception as e:
+        return 422, {"message": f"处理文件时发生错误: {str(e)}"}
