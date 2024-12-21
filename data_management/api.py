@@ -316,6 +316,9 @@ def upsert_purchase_custom_info(request, data: PurchaseCustomSchema):
     auth=None,
 )
 def get_jancode_parent_child_mapping(request, q: str = ""):
+    """
+    获取 parent_code 的子 code 映射关系
+    """
     query = Q()
     # 检查参数
     if q:
@@ -346,3 +349,25 @@ def get_jancode_parent_child_mapping(request, q: str = ""):
         return result
 
     return []
+
+
+@router.post(
+    "/jancode/parent-child/upsert",
+    response=Any,
+    tags=["datas_management"],
+)
+def upsert_jancode_parent_child_mapping(
+    request, data: JancodeParentChildMappingListSchema
+):
+    """
+    新增或更新 parent_code 的子 code 映射关系
+    """
+
+    parent_code = data.parent_code
+    JancodeParentChildMapping.objects.filter(parent_jancode=parent_code).delete()
+    for child_code in data.child_codes:
+        JancodeParentChildMapping.objects.create(
+            parent_jancode=parent_code, child_jancode=child_code
+        )
+
+    return {"message": "更新成功！！！"}
