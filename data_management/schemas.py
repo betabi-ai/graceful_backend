@@ -17,6 +17,7 @@ class ProductsUpsertSchema(Schema):
     itemid: str
     jan_code: Optional[str] = None
     product_name: Optional[str] = None
+    product_price: Optional[float] = None
     bare_code: Optional[str] = None
     item_count: int = 1
     compatible_models: Optional[str] = None
