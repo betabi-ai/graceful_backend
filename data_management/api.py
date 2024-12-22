@@ -3,7 +3,8 @@ from io import StringIO
 from typing import Any, List
 from django.db.models import Q
 from django.conf import settings
-
+from itertools import groupby
+from operator import itemgetter
 from ninja import Router, File
 from ninja_jwt.authentication import JWTAuth
 from ninja.files import UploadedFile
@@ -75,7 +76,7 @@ def get_products(
 @router.get("/products/all", response=List[Any], tags=["datas_management"])
 def get_all_products(request):
     return Products.objects.filter().values(
-        "id", "jan_code", "itemid", "product_name", "supplier_id"
+        "id", "jan_code", "itemid", "product_name", "supplier_id", "product_price"
     )
 
 
@@ -316,7 +317,7 @@ def upsert_purchase_custom_info(request, data: PurchaseCustomSchema):
 
 @router.get(
     "/jancode/parent-child",
-    response=List[JancodeParentChildMappingListSchema],
+    response=List[Any],
     tags=["datas_management"],
     auth=None,
 )
@@ -328,32 +329,28 @@ def get_jancode_parent_child_mapping(request, q: str = ""):
     # 检查参数
     if q:
         # 查询条件：匹配 parent_jancode 或 child_jancode
-        query = Q(parent_jancode__icontains=q) | Q(child_jancode__icontains=q)
+        query = Q(parent_jancode__icontains=q)
 
-    relationships = (
+    # 查询数据并排序（groupby 要求有序）
+    queryset = (
         JancodeParentChildMapping.objects.filter(query)
-        .values("parent_jancode")
-        .distinct()
+        .values("parent_jancode", "child_jancode", "product_price")
+        .order_by("parent_jancode")
     )
 
-    if relationships.exists():
-        parent_codes = [rel["parent_jancode"] for rel in relationships]
-        result = []
+    # 聚合数据
+    result = []
+    for parent_jancode, group in groupby(queryset, key=itemgetter("parent_jancode")):
+        child_codes = [
+            {
+                "child_jancode": item["child_jancode"],
+                "product_price": item["product_price"],
+            }
+            for item in group
+        ]
+        result.append({"parent_code": parent_jancode, "child_codes": child_codes})
 
-        for parent_code in parent_codes:
-            children = JancodeParentChildMapping.objects.filter(
-                parent_jancode=parent_code
-            ).values_list("child_jancode", flat=True)
-            result.append(
-                {
-                    "parent_code": parent_code,
-                    "child_codes": list(children),
-                }
-            )
-
-        return result
-
-    return []
+    return result
 
 
 @router.post(
@@ -362,40 +359,32 @@ def get_jancode_parent_child_mapping(request, q: str = ""):
     tags=["datas_management"],
 )
 def upsert_jancode_parent_child_mapping(
-    request, data: JancodeParentChildMappingListSchema
+    request, datas: List[JancodeParentChildMappingListSchema]
 ):
     """
     新增或更新 parent_code 的子 code 映射关系
     """
-
-    parent_code = data.parent_code
-    JancodeParentChildMapping.objects.filter(parent_jancode=parent_code).delete()
-    user = request.user
-
-    update_or_create_jancode_parent_child_mapping(data, user)
+    if datas and isinstance(datas, list) and len(datas) > 0:
+        JancodeParentChildMapping.objects.filter(
+            parent_jancode=datas[0].parent_jancode
+        ).delete()
+        user = request.user
+        for data in datas:
+            if user:
+                JancodeParentChildMapping.objects.create(
+                    parent_jancode=data.parent_jancode,
+                    child_jancode=data.child_jancode,
+                    product_price=data.product_price,
+                    updated_by=user,
+                )
+            else:
+                JancodeParentChildMapping.objects.create(
+                    parent_jancode=data.parent_jancode,
+                    child_jancode=data.child_jancode,
+                    product_price=data.product_price,
+                )
 
     return {"message": "操作成功！！！"}
-
-
-def update_or_create_jancode_parent_child_mapping(
-    data: JancodeParentChildMappingListSchema, user=None
-):
-    """
-    批量新增或更新 parent_code 的子 code 映射关系
-    """
-
-    parent_code = data.parent_code
-    JancodeParentChildMapping.objects.filter(parent_jancode=parent_code).delete()
-
-    for child_code in data.child_codes:
-        if user:
-            JancodeParentChildMapping.objects.create(
-                parent_jancode=parent_code, child_jancode=child_code, updated_by=user
-            )
-        else:
-            JancodeParentChildMapping.objects.create(
-                parent_jancode=parent_code, child_jancode=child_code
-            )
 
 
 @router.post(
@@ -425,13 +414,34 @@ def upload_jancode_parent_child_mapping_file(request, file: UploadedFile = File(
             if not any(row.values()):
                 continue
 
-            update_or_create_jancode_parent_child_mapping(
-                JancodeParentChildMappingListSchema(
-                    parent_code=row["parent_code"],
-                    child_codes=row["child_code"].split("X"),
-                ),
-                user,
-            )
+            parent_code = row["parent_code"]
+            child_codes = row["child_code"].split("X")
+
+            JancodeParentChildMapping.objects.filter(
+                parent_jancode=parent_code
+            ).delete()
+
+            for child_code in child_codes:
+                if not child_code:
+                    continue
+                product_price = 0
+                product = Products.objects.filter(jan_code=child_code).first()
+                if product:
+                    product_price = product.product_price
+
+                if user:
+                    JancodeParentChildMapping.objects.create(
+                        parent_jancode=parent_code,
+                        child_jancode=child_code,
+                        product_price=product_price,
+                        updated_by=user,
+                    )
+                else:
+                    JancodeParentChildMapping.objects.create(
+                        parent_jancode=parent_code,
+                        child_jancode=child_code,
+                        product_price=product_price,
+                    )
 
         return 200, {"message": f"上传成功！！！"}
 

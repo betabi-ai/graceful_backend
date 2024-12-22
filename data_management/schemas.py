@@ -115,5 +115,6 @@ class PurchaseCustomSchema(Schema):
 
 
 class JancodeParentChildMappingListSchema(Schema):
-    parent_code: str
-    child_codes: List[str]
+    parent_jancode: str
+    child_jancode: str
+    product_price: float

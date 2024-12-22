@@ -368,6 +368,7 @@ class RakutenMonitorKeywordsRank(models.Model):
 class Products(models.Model):
     itemid = models.CharField(max_length=50)
     jan_code = models.CharField(max_length=20)
+    product_price = models.IntegerField()
     product_name = models.CharField(max_length=100, blank=True, null=True)
     gtin_code = models.CharField(max_length=13, blank=True, null=True)
     bare_code = models.CharField(max_length=20, blank=True, null=True)
@@ -569,6 +570,7 @@ class ProductCustomInfos(models.Model):
 class JancodeParentChildMapping(models.Model):
     parent_jancode = models.CharField(max_length=20)
     child_jancode = models.CharField(max_length=20)
+    product_price = models.IntegerField()
     updated_by = models.ForeignKey(
         User,
         on_delete=models.SET_DEFAULT,
