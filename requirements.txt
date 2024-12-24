@@ -16,6 +16,7 @@ cron-descriptor==1.4.5
 cryptography==43.0.3
 decouple==0.0.7
 Django==5.1.2
+django-auditlog==3.0.0
 django-celery-beat==2.7.0
 django-celery-results==2.5.1
 django-cors-headers==4.5.0
@@ -35,8 +36,10 @@ injector==0.22.0
 kombu==5.4.2
 markdown-it-py==3.0.0
 mdurl==0.1.2
+numpy==2.2.1
 openpyxl==3.1.5
 packaging==24.1
+pandas==2.2.3
 prompt_toolkit==3.0.48
 psycopg==3.2.3
 pycparser==2.22
@@ -46,6 +49,7 @@ Pygments==2.18.0
 PyJWT==2.9.0
 python-crontab==3.2.0
 python-dateutil==2.9.0.post0
+pytz==2024.2
 PyYAML==6.0.2
 rav==0.0.9
 redis==5.1.1

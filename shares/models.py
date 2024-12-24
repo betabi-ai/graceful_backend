@@ -567,6 +567,7 @@ class ProductCustomInfos(models.Model):
         db_table = "product_custom_infos"
 
 
+# Jan code 一对多的对应关系 model 如：1111 --> 1234X2223
 class JancodeParentChildMapping(models.Model):
     parent_jancode = models.CharField(max_length=20)
     child_jancode = models.CharField(max_length=20)
@@ -582,3 +583,154 @@ class JancodeParentChildMapping(models.Model):
     class Meta:
         managed = False
         db_table = "jancode_parent_child_mapping"
+
+
+class Orders(models.Model):
+    order_number = models.CharField(primary_key=True, max_length=20)
+    order_date = models.DateTimeField(blank=True, null=True)
+    shop_code = models.CharField(max_length=10, blank=True, null=True)
+    shop_name = models.CharField(max_length=100, blank=True, null=True)
+    order_code = models.CharField(max_length=50, blank=True, null=True)
+    client_section_name1 = models.CharField(max_length=100, blank=True, null=True)
+    client_section_name2 = models.CharField(max_length=100, blank=True, null=True)
+    client_name = models.CharField(max_length=100, blank=True, null=True)
+    client_kana = models.CharField(max_length=100, blank=True, null=True)
+    client_zip = models.CharField(max_length=10, blank=True, null=True)
+    client_address1 = models.CharField(max_length=255, blank=True, null=True)
+    client_address2 = models.CharField(max_length=255, blank=True, null=True)
+    client_tel = models.CharField(max_length=20, blank=True, null=True)
+    client_mail = models.CharField(max_length=255, blank=True, null=True)
+    terminal_type = models.SmallIntegerField(blank=True, null=True)
+    ship_section_name1 = models.CharField(max_length=100, blank=True, null=True)
+    ship_section_name2 = models.CharField(max_length=100, blank=True, null=True)
+    ship_name = models.CharField(max_length=100, blank=True, null=True)
+    ship_kana = models.CharField(max_length=100, blank=True, null=True)
+    ship_zip = models.CharField(max_length=10, blank=True, null=True)
+    ship_address1 = models.CharField(max_length=255, blank=True, null=True)
+    ship_address2 = models.CharField(max_length=255, blank=True, null=True)
+    ship_tel = models.CharField(max_length=20, blank=True, null=True)
+    delivery_number = models.CharField(max_length=50, blank=True, null=True)
+    delivery_type_code = models.CharField(max_length=20, blank=True, null=True)
+    delivery_type_name = models.CharField(max_length=100, blank=True, null=True)
+    delivery_code = models.CharField(max_length=20, blank=True, null=True)
+    delivery_name = models.CharField(max_length=100, blank=True, null=True)
+    delivery_req_date = models.DateField(blank=True, null=True)
+    delivery_time_code = models.CharField(max_length=20, blank=True, null=True)
+    delivery_time_name = models.CharField(max_length=100, blank=True, null=True)
+    delivery_date = models.DateField(blank=True, null=True)
+    multiple_delivery_flag = models.SmallIntegerField(blank=True, null=True)
+    payment_code = models.CharField(max_length=20, blank=True, null=True)
+    payment_name = models.CharField(max_length=100, blank=True, null=True)
+    order_option1 = models.CharField(max_length=100, blank=True, null=True)
+    order_option2 = models.CharField(max_length=100, blank=True, null=True)
+    order_option3 = models.CharField(max_length=100, blank=True, null=True)
+    order_option4 = models.CharField(max_length=100, blank=True, null=True)
+    order_option5 = models.CharField(max_length=100, blank=True, null=True)
+    order_option6 = models.CharField(max_length=100, blank=True, null=True)
+    order_option7 = models.CharField(max_length=100, blank=True, null=True)
+    order_option8 = models.CharField(max_length=100, blank=True, null=True)
+    order_option9 = models.CharField(max_length=100, blank=True, null=True)
+    order_option10 = models.CharField(max_length=100, blank=True, null=True)
+    order_memo = models.CharField(max_length=200, blank=True, null=True)
+    comment = models.TextField(blank=True, null=True)
+    subtotal_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    tax_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    tax_base = models.SmallIntegerField(blank=True, null=True)
+    tax_round = models.SmallIntegerField(blank=True, null=True)
+    tax_system_type = models.SmallIntegerField(blank=True, null=True)
+    carriage_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    cash_on_delivery = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    option1_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    option2_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    point = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    coupon = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    total_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    taxin_total_price_10 = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    taxin_total_price_8 = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    taxin_total_price_0 = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    tax_total_price_10 = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    tax_total_price_8 = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    phase_name = models.CharField(max_length=50, blank=True, null=True)
+    check_mark1 = models.SmallIntegerField(blank=True, null=True)
+    check_mark2 = models.SmallIntegerField(blank=True, null=True)
+    check_mark3 = models.SmallIntegerField(blank=True, null=True)
+    cancel_flag = models.SmallIntegerField(blank=True, null=True)
+    bundle_flag = models.SmallIntegerField(blank=True, null=True)
+    bundle_ahead_number = models.CharField(max_length=50, blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(blank=True, null=True)
+    creating_source_type = models.CharField(max_length=10, blank=True, null=True)
+    delivery_memo = models.CharField(max_length=200, blank=True, null=True)
+    mail_type = models.SmallIntegerField(blank=True, null=True)
+    mail_name = models.CharField(max_length=50, blank=True, null=True)
+    reserve_type = models.SmallIntegerField(blank=True, null=True)
+    reserve_name = models.CharField(max_length=100, blank=True, null=True)
+    short_memo = models.CharField(max_length=200, blank=True, null=True)
+    postit_color = models.CharField(max_length=20, blank=True, null=True)
+    postit_memo = models.CharField(max_length=200, blank=True, null=True)
+    createdat = models.DateTimeField(blank=True, null=True)
+    detail_downloaded = models.BooleanField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "orders"
+
+
+# 已经拆分好jan code 的订单详情 model
+class OrderDetailsCalc(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    order_number = models.ForeignKey(
+        Orders, on_delete=models.DO_NOTHING, related_name="details"
+    )
+    jan_cd = models.CharField(max_length=10, blank=True, null=True)
+    original_jan_cd = models.CharField(max_length=50, blank=True, null=True)
+    item_code = models.CharField(max_length=50, blank=True, null=True)
+    attribute1_code = models.CharField(max_length=50, blank=True, null=True)
+    attribute1_name = models.CharField(max_length=200, blank=True, null=True)
+    attribute2_code = models.CharField(max_length=50, blank=True, null=True)
+    attribute2_name = models.CharField(max_length=200, blank=True, null=True)
+    amount = models.IntegerField(blank=True, null=True)
+    amount_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    tax_type = models.SmallIntegerField(blank=True, null=True)
+    reduced_tax_rate_type = models.SmallIntegerField(blank=True, null=True)
+    freight_type = models.SmallIntegerField(blank=True, null=True)
+    free_item_code = models.CharField(max_length=50, blank=True, null=True)
+    component_flag = models.SmallIntegerField(blank=True, null=True)
+    tax_rate = models.SmallIntegerField(blank=True, null=True)
+    sender_type = models.SmallIntegerField(blank=True, null=True)
+    target_stock_type = models.SmallIntegerField(blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True)
+    order_date = models.DateTimeField(blank=True, null=True)
+    order_day = models.DateField(blank=True, null=True)
+    order_month = models.DateField(blank=True, null=True)
+    order_year = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "order_details_calc"
