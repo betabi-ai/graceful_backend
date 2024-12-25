@@ -20,7 +20,6 @@ _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
 @router.get(
     "/jan_sales",
     response=List[Any],
-    auth=None,
     tags=["sale_datas"],
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
@@ -109,7 +108,6 @@ def get_jancode_sales_amount_infos(request, q: str = ""):
     "/jan_sales/{str:jan_code}",
     response=List[Any],
     tags=["sale_datas"],
-    auth=None,
 )
 def get_jancode_sale_data_list(
     request,
