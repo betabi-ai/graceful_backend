@@ -3,7 +3,6 @@ from django.http import HttpResponse
 from ninja import Router
 import openpyxl
 from openpyxl.chart import LineChart, Reference, BarChart
-from openpyxl.chart.axis import DateAxis
 
 from django.db.models import Q, F
 from ninja.pagination import paginate, PageNumberPagination
