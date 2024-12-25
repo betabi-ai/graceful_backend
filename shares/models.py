@@ -703,9 +703,7 @@ class Orders(models.Model):
 # 已经拆分好jan code 的订单详情 model
 class OrderDetailsCalc(models.Model):
     id = models.BigAutoField(primary_key=True)
-    order_number = models.ForeignKey(
-        Orders, on_delete=models.DO_NOTHING, related_name="details"
-    )
+    order_number = models.CharField(max_length=20)
     jan_cd = models.CharField(max_length=10, blank=True, null=True)
     original_jan_cd = models.CharField(max_length=50, blank=True, null=True)
     item_code = models.CharField(max_length=50, blank=True, null=True)
