@@ -41,3 +41,43 @@ PRODUCT_DEFAULT_VALUES = {
     "alcohol_pack_desc": "",
     "min_order_quantity": 0,
 }
+
+# 批次下的进货信息导入时的字段与数据库字段对应关系
+PURCHASE_PRODUCT_UPLOAD_FIELDNAME_MAPPING = {
+    "JANコード": "jan_code",
+    "进货数量": "quantity",
+    "裸片仕入単価(CNY)": "bare_price",
+    "酒精包(CNY)": "alcohol_bag_price",
+    "信封(CNY)": "envelope",
+    "说明书(CNY)": "instruction_manual_price",
+    "贴膜神器(CNY)": "adapter_price",
+    "包装盒(CNY)": "packaging_box_price",
+    "吸塑(CNY)": "plastic_packaging_price",
+    "刮卡(CNY)": "scratch_card_price",
+    "蜡纸(CNY)": "wax_pager_price",
+    "过塑(CNY)": "lamination_price",
+    "人工(CNY)": "labor_cost",
+    "包装袋(CNY)": "packaging_bag_price",
+    "税表番号": "tax_form_code",
+    "関税率": "tariff_rate",
+}
+
+# 批次下的进货信息导入时的字段默认值对应
+PURCHASE_PRODUCT_UPLOAD_DEFAULT_VALUE = {
+    "jan_code": "",
+    "quantity": 0,
+    "bare_price": 0.0,
+    "alcohol_bag_price": 0.0,
+    "envelope": 0.0,
+    "instruction_manual_price": 0.0,
+    "adapter_price": 0.0,
+    "packaging_box_price": 0.0,
+    "plastic_packaging_price": 0.0,
+    "scratch_card_price": 0.0,
+    "wax_pager_price": 0.0,
+    "lamination_price": 0.0,
+    "labor_cost": 0.0,
+    "packaging_bag_price": 0.0,
+    "tax_form_code": "",
+    "tariff_rate": 0.0,
+}

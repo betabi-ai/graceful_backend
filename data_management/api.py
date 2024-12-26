@@ -15,8 +15,10 @@ from ninja.pagination import paginate, PageNumberPagination
 from data_management.constant import (
     PRODUCT_DEFAULT_VALUES,
     PRODUCT_UPLOAD_FIELDNAME_MAPPING,
+    PURCHASE_PRODUCT_UPLOAD_DEFAULT_VALUE,
+    PURCHASE_PRODUCT_UPLOAD_FIELDNAME_MAPPING,
 )
-from data_management.tools import generate_gs_one_jancodes
+from data_management.tools import fill_defaults, generate_gs_one_jancodes
 
 from data_management.schemas import (
     CreateNewGtinCodeSchema,
@@ -240,17 +242,6 @@ def upload_products(request, file: UploadedFile = File(...)):
         return 422, {"message": f"处理文件时发生错误: {str(e)}"}
 
 
-# 用于填充默认值的函数
-def fill_defaults(data, defaults):
-    """
-    为字段值为空的情况填充默认值
-    """
-    return {
-        key: (value if value is not None and value != "" else defaults.get(key, value))
-        for key, value in data.items()
-    }
-
-
 # =========================== suppliers =================================
 
 
@@ -437,6 +428,91 @@ def upsert_purchase_product(request, data: PurchaseDetailsUpsertInputSchema):
     # print(new_info)
 
     return new_info
+
+
+@router.post(
+    "/purchases/product/upload/{int:purchase_id}",
+    response={200: Any, 422: Any},
+    tags=["datas_management"],
+)
+def upload_purchase_product(request, purchase_id: int, file: UploadedFile = File(...)):
+    """
+    上传 商品数据 文件
+    """
+    try:
+
+        purchase_info = PurchaseInfos.objects.filter(id=purchase_id).first()
+        if not purchase_info:
+            return 422, {"message": "没找到批次信息，请重试！"}
+
+        # 读取并解码文件内容
+        file_content = file.read().decode("utf-8")
+        csv_reader = csv.DictReader(StringIO(file_content))
+
+        # 替换字段名
+        csv_reader.fieldnames = [
+            PURCHASE_PRODUCT_UPLOAD_FIELDNAME_MAPPING.get(field, field)
+            for field in csv_reader.fieldnames
+        ]
+
+        # 检查文件是否包含必要字段
+        required_fields = {"jan_code", "quantity"}
+        if not required_fields.issubset(csv_reader.fieldnames):
+            missing_fields = required_fields - set(csv_reader.fieldnames or [])
+            return 422, {"message": f"缺少必要字段: {', '.join(missing_fields)}"}
+
+        # 解析并处理数据
+        user = request.user
+
+        products = []
+        for row in csv_reader:
+
+            # 去除空行
+            if not any(row.values()):
+                continue
+
+            jan_code = row["jan_code"]
+            if not jan_code:
+                continue
+
+            product = Products.objects.filter(jan_code=jan_code).first()
+            if not product:
+                continue
+
+            new_product = fill_defaults(row, PURCHASE_PRODUCT_UPLOAD_DEFAULT_VALUE)
+
+            if user:
+                products.append(
+                    PurchaseDetails(
+                        **new_product,
+                        purchase_id=purchase_id,
+                        product_id=product.id,
+                        supplier_id=product.supplier_id,
+                        batch_code=purchase_info.batch_code,
+                        exchange_rate=purchase_info.exchange_rate,
+                        updated_by=user,
+                    )
+                )
+            else:
+                products.append(
+                    PurchaseDetails(
+                        **new_product,
+                        product_id=product.id,
+                        batch_code=purchase_info.batch_code,
+                        supplier_id=product.supplier_id,
+                        exchange_rate=purchase_info.exchange_rate,
+                        purchase_id=purchase_id,
+                    )
+                )
+
+        PurchaseDetails.objects.bulk_create(products)
+
+        return 200, {"message": f"上传成功！！！"}
+
+    except UnicodeDecodeError:
+        return 422, {"message": "文件解码失败，请确保文件是 UTF-8 编码"}
+    except Exception as e:
+        return 422, {"message": f"处理文件时发生错误: {str(e)}"}
 
 
 # =========================== product_custom_infos =================================

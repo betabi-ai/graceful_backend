@@ -44,3 +44,14 @@ def generate_gs_one_jancodes(gs_prefix, start, end, user=None):
             )
 
     return datas
+
+
+# 用于填充默认值的函数
+def fill_defaults(data, defaults):
+    """
+    为字段值为空的情况填充默认值
+    """
+    return {
+        key: (value if value is not None and value != "" else defaults.get(key, value))
+        for key, value in data.items()
+    }

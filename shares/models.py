@@ -366,6 +366,7 @@ class RakutenMonitorKeywordsRank(models.Model):
 
 # 商品表model
 class Products(models.Model):
+    id = models.BigAutoField(primary_key=True)
     itemid = models.CharField(max_length=50)
     jan_code = models.CharField(max_length=20)
     product_price = models.IntegerField()
