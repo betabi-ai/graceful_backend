@@ -15,6 +15,8 @@ from ninja.pagination import paginate, PageNumberPagination
 from data_management.constant import (
     PRODUCT_DEFAULT_VALUES,
     PRODUCT_UPLOAD_FIELDNAME_MAPPING,
+    PURCHASE_CUSTOM_UPLOAD_DEFAULT_VALUE,
+    PURCHASE_CUSTOM_UPLOAD_FIELDNAME_MAPPING,
     PURCHASE_PRODUCT_UPLOAD_DEFAULT_VALUE,
     PURCHASE_PRODUCT_UPLOAD_FIELDNAME_MAPPING,
 )
@@ -34,7 +36,7 @@ from data_management.schemas import (
 from shares.models import (
     GsoneJancode,
     JancodeParentChildMapping,
-    ProductCustomInfos,
+    PurchaseCustomInfos,
     Products,
     ProductsSuppliers,
     PurchaseDetails,
@@ -515,14 +517,14 @@ def upload_purchase_product(request, purchase_id: int, file: UploadedFile = File
         return 422, {"message": f"处理文件时发生错误: {str(e)}"}
 
 
-# =========================== product_custom_infos =================================
+# =========================== purchase_custom_infos =================================
 
 
 @router.get(
     "/purchases/customs", response=List[PurchaseCustomSchema], tags=["datas_management"]
 )
 def get_purchase_custom_infos(request, pid: int):
-    qs = ProductCustomInfos.objects.filter(purchase_id=pid)
+    qs = PurchaseCustomInfos.objects.filter(purchase_id=pid)
 
     return qs
 
@@ -537,9 +539,98 @@ def upsert_purchase_custom_info(request, data: PurchaseCustomSchema):
     user = request.user
     if user:
         info["updated_by"] = user
-    new_info, _ = ProductCustomInfos.objects.update_or_create(id=data.id, defaults=info)
+    new_info, _ = PurchaseCustomInfos.objects.update_or_create(
+        id=data.id, defaults=info
+    )
 
     return 200, new_info
+
+
+@router.post(
+    "/purchases/custom/upload/{int:purchase_id}",
+    response={200: Any, 422: Any},
+    tags=["datas_management"],
+)
+def upload_purchase_custom(request, purchase_id: int, file: UploadedFile = File(...)):
+    """
+    上传 报关信息 文件
+    """
+    try:
+        print(".......purchase_id:", purchase_id)
+        purchase_info = PurchaseInfos.objects.filter(id=purchase_id).first()
+        if not purchase_info:
+            return 422, {"message": "没找到批次信息，请重试！"}
+
+        # 读取并解码文件内容
+        file_content = file.read().decode("utf-8")
+        csv_reader = csv.DictReader(StringIO(file_content))
+
+        # 替换字段名
+        csv_reader.fieldnames = [
+            PURCHASE_CUSTOM_UPLOAD_FIELDNAME_MAPPING.get(field, field)
+            for field in csv_reader.fieldnames
+        ]
+
+        # 检查文件是否包含必要字段
+        required_fields = {"jan_code"}
+        if not required_fields.issubset(csv_reader.fieldnames):
+            missing_fields = required_fields - set(csv_reader.fieldnames or [])
+            return 422, {"message": f"缺少必要字段: {', '.join(missing_fields)}"}
+
+        # 解析并处理数据
+        user = request.user
+
+        customs = []
+        not_insert_customs = 0
+        for row in csv_reader:
+
+            # 去除空行
+            if not any(row.values()):
+                continue
+
+            jan_code = row["jan_code"]
+            if not jan_code:
+                not_insert_customs += 1
+                continue
+
+            product = Products.objects.filter(jan_code=jan_code).first()
+            if not product:
+                not_insert_customs += 1
+                continue
+
+            new_custom = fill_defaults(row, PURCHASE_CUSTOM_UPLOAD_DEFAULT_VALUE)
+
+            if user:
+                customs.append(
+                    PurchaseCustomInfos(
+                        **new_custom,
+                        purchase_id=purchase_id,
+                        batch_code=purchase_info.batch_code,
+                        product_id=product.id,
+                        updated_by=user,
+                    )
+                )
+            else:
+                customs.append(
+                    PurchaseCustomInfos(
+                        **new_custom,
+                        product_id=product.id,
+                        batch_code=purchase_info.batch_code,
+                        purchase_id=purchase_id,
+                    )
+                )
+
+        PurchaseCustomInfos.objects.bulk_create(customs)
+
+        if not_insert_customs > 0:
+            return 422, {"message": "有未成功导入的数据哦！"}
+
+        return 200, {"message": f"上传成功！！！"}
+
+    except UnicodeDecodeError:
+        return 422, {"message": "文件解码失败，请确保文件是 UTF-8 编码"}
+    except Exception as e:
+        return 422, {"message": f"处理文件时发生错误: {str(e)}"}
 
 
 # =========================== jancode_parent_child_mapping =================================

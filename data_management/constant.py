@@ -81,3 +81,45 @@ PURCHASE_PRODUCT_UPLOAD_DEFAULT_VALUE = {
     "tax_form_code": "",
     "tariff_rate": 0.0,
 }
+
+# 报关信息导入时的字段与数据库字段对应关系
+PURCHASE_CUSTOM_UPLOAD_FIELDNAME_MAPPING = {
+    "JANコード": "jan_code",
+    "商品中文名": "chinese_name",
+    "商品英文名": "english_name",
+    "成品材质中文名": "material_chinese",
+    "成品材质英文名": "material_english",
+    "用途": "product_usage",
+    "描述": "description",
+    "单价(JPY)": "unit_price",
+    "箱数": "boxes_count",
+    "每箱数量": "per_box_count",
+    "每箱净重(KG)": "per_box_netweight",
+    "每箱毛重(KG)": "per_box_grossweight",
+    "包装尺寸(CM)": "carton_size",
+    "玻璃面積(㎡)": "glass_area",
+    "海关备注": "customs_remark",
+    "裸件LOGO": "bare_log",
+    "成品LOGO": "logo",
+}
+
+# 报关信息导入时的字段默认值对应
+PURCHASE_CUSTOM_UPLOAD_DEFAULT_VALUE = {
+    "jan_code": "",
+    "chinese_name": "",
+    "english_name": "",
+    "material_chinese": "",
+    "material_english": "",
+    "product_usage": "",
+    "description": "",
+    "unit_price": 0.0,
+    "boxes_count": 0,
+    "per_box_count": 0,
+    "per_box_netweight": 0.0,
+    "per_box_grossweight": 0.0,
+    "carton_size": "",
+    "glass_area": 0.0,
+    "customs_remark": "",
+    "bare_log": "",
+    "logo": "",
+}

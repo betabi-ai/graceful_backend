@@ -528,7 +528,7 @@ class PurchaseDetails(models.Model):
 
 
 # 海关报关信息表 Model
-class ProductCustomInfos(models.Model):
+class PurchaseCustomInfos(models.Model):
     purchase_id = models.IntegerField()
     batch_code = models.CharField(max_length=50)
     product_id = models.IntegerField()
@@ -538,15 +538,7 @@ class ProductCustomInfos(models.Model):
     material_chinese = models.CharField(max_length=20, blank=True, null=True)
     material_english = models.CharField(max_length=20, blank=True, null=True)
     product_usage = models.CharField(max_length=20, blank=True, null=True)
-    item_height = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    item_width = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    item_length = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
+    carton_size = models.CharField(max_length=200, blank=True, null=True)
     glass_area = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
     )
@@ -577,7 +569,7 @@ class ProductCustomInfos(models.Model):
 
     class Meta:
         managed = False
-        db_table = "product_custom_infos"
+        db_table = "purchase_custom_infos"
 
 
 # Jan code 一对多的对应关系 model 如：1111 --> 1234X2223

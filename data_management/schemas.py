@@ -106,9 +106,7 @@ class PurchaseCustomSchema(Schema):
     material_chinese: Optional[str] = None
     material_english: Optional[str] = None
     product_usage: Optional[str] = None
-    item_height: Optional[float] = None
-    item_width: Optional[float] = None
-    item_length: Optional[float] = None
+    carton_size: Optional[str] = None
     glass_area: Optional[float] = None
     logo: Optional[str] = None
     bare_log: Optional[str] = None
