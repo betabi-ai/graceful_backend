@@ -1,0 +1,43 @@
+# 商品数据模板title与数据库字段的对应
+PRODUCT_UPLOAD_FIELDNAME_MAPPING = {
+    "商品コード": "itemid",
+    "JANコード": "jan_code",
+    "中文商品名": "product_name",
+    "商品价格(JPY)": "product_price",
+    "属性1名": "attribute",
+    "属性2名": "compatible_models",
+    "GTIN（JANコード）": "gtin_code",
+    "数量": "item_count",
+    "裸片JAN": "bare_code",
+    "取扱状況": "status",
+    "供货商": "supplier_id",
+    "一套重量(g)": "weight",
+    "适配神器说明": "adapter_desc",
+    "箱属性说明": "box_properties_desc",
+    "注意事项": "notices_desc",
+    "包装盒说明": "packaging_desc",
+    "酒精包种类": "alcohol_pack_desc",
+    "起訂量": "min_order_quantity",
+}
+
+# products插入值时，处理默认值
+PRODUCT_DEFAULT_VALUES = {
+    "itemid": "",
+    "jan_code": "",
+    "product_name": "",
+    "product_price": 0,
+    "attribute": "",
+    "compatible_models": "",
+    "gtin_code": "",
+    "item_count": 0,
+    "bare_code": "",
+    "status": 1,
+    "supplier_id": None,
+    "weight": 0,
+    "adapter_desc": "",
+    "box_properties_desc": "",
+    "notices_desc": "",
+    "packaging_desc": "",
+    "alcohol_pack_desc": "",
+    "min_order_quantity": 0,
+}

@@ -12,6 +12,10 @@ from ninja.orm import create_schema
 from ninja.pagination import paginate, PageNumberPagination
 
 
+from data_management.constant import (
+    PRODUCT_DEFAULT_VALUES,
+    PRODUCT_UPLOAD_FIELDNAME_MAPPING,
+)
 from data_management.tools import generate_gs_one_jancodes
 
 from data_management.schemas import (
@@ -95,6 +99,156 @@ def upsert_product(request, data: ProductsUpsertSchema):
     new_product, _ = Products.objects.update_or_create(id=data.id, defaults=product)
 
     return new_product
+
+
+@router.post(
+    "/products/upload",
+    response={200: Any, 422: Any},
+    tags=["datas_management"],
+)
+def upload_products(request, file: UploadedFile = File(...)):
+    """
+    上传 商品数据 文件
+    """
+    try:
+        # 读取并解码文件内容
+        file_content = file.read().decode("utf-8")
+        csv_reader = csv.DictReader(StringIO(file_content))
+
+        # 替换字段名
+        csv_reader.fieldnames = [
+            PRODUCT_UPLOAD_FIELDNAME_MAPPING.get(field, field)
+            for field in csv_reader.fieldnames
+        ]
+
+        # print("=== fieldnames:", csv_reader.fieldnames)
+
+        # 检查文件是否包含必要字段
+        required_fields = {"itemid", "jan_code"}
+        if not required_fields.issubset(csv_reader.fieldnames):
+            missing_fields = required_fields - set(csv_reader.fieldnames or [])
+            return 422, {"message": f"缺少必要字段: {', '.join(missing_fields)}"}
+
+        # 解析并处理数据
+        user = request.user
+        not_insert_jancodes = set()
+
+        suppliers = ProductsSuppliers.objects.all().values("supplier_name", "id")
+
+        row_count = 0
+
+        for row in csv_reader:
+            row_count = row_count + 1
+
+            # 去除空行
+            if not any(row.values()):
+                continue
+
+            jan_code = row["jan_code"]
+            gtin_code = row["gtin_code"]
+
+            # 如果Jan code 已经存在，则不导入此条数据
+            product = Products.objects.filter(jan_code=jan_code).first()
+            if product:
+                not_insert_jancodes.add(jan_code)
+                continue
+
+            if gtin_code:
+                gtin_info = GsoneJancode.objects.filter(gs_jancode=gtin_code).first()
+
+                if gtin_info:
+                    if gtin_info.product_jancode:
+                        if gtin_info.product_jancode != jan_code:
+                            not_insert_jancodes.add(jan_code)
+                            continue
+                    else:
+                        product_gtin_info = GsoneJancode.objects.filter(
+                            product_jancode=jan_code
+                        ).first()
+                        if product_gtin_info:
+                            not_insert_jancodes.add(jan_code)
+                            continue
+                else:
+                    # 表示此gtin并不是已经入库的，只维护products中即可。
+                    pass
+
+            status = row["status"]
+            match status:
+                case "廃盤":
+                    row["status"] = 20
+                case "廃盤(予定)":
+                    row["status"] = 10
+                case _:
+                    row["status"] = 1
+
+            supplier_name = row["supplier_id"]
+            # print("===supplier_name", supplier_name)
+            suppier = [
+                supplier
+                for supplier in suppliers
+                if supplier_name == supplier["supplier_name"]
+            ]
+
+            # print("===suppier:", suppier)
+
+            if len(suppier) > 0:
+                row["supplier_id"] = suppier[0]["id"]
+            else:
+                row["supplier_id"] = None
+
+            new_product = fill_defaults(row, PRODUCT_DEFAULT_VALUES)
+
+            # print(new_product)
+
+            gs = GsoneJancode.objects.filter(gs_jancode=gtin_code).first()
+
+            if user:
+                p = Products.objects.create(
+                    **new_product,
+                    updated_by=user,
+                )
+
+                if gs:
+                    gs.product_jancode = jan_code
+                    gs.updated_by = user
+                    gs.save()
+
+            else:
+                p = Products.objects.create(**new_product)
+
+                if gs:
+                    gs.product_jancode = jan_code
+                    gs.save()
+
+        not_insert_count = len(not_insert_jancodes)
+        print("row_count", row_count, not_insert_count)
+        if not_insert_count > 0:
+            if row_count == not_insert_count:
+                return 422, {
+                    "message": f"未上传成功的JANコード:【{','.join(not_insert_jancodes)}】"
+                }
+            else:
+                return 200, {
+                    "message": f"未上传成功的JANコード:【{','.join(not_insert_jancodes)}】"
+                }
+        else:
+            return 200, {"message": f"上传成功！！！"}
+
+    except UnicodeDecodeError:
+        return 422, {"message": "文件解码失败，请确保文件是 UTF-8 编码"}
+    except Exception as e:
+        return 422, {"message": f"处理文件时发生错误: {str(e)}"}
+
+
+# 用于填充默认值的函数
+def fill_defaults(data, defaults):
+    """
+    为字段值为空的情况填充默认值
+    """
+    return {
+        key: (value if value is not None and value != "" else defaults.get(key, value))
+        for key, value in data.items()
+    }
 
 
 # =========================== suppliers =================================
