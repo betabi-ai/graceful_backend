@@ -552,6 +552,18 @@ class ProductCustomInfos(models.Model):
     logo = models.CharField(max_length=50, blank=True, null=True)
     bare_log = models.CharField(max_length=50, blank=True, null=True)
     customs_remark = models.CharField(max_length=200, blank=True, null=True)
+
+    boxes_count = models.IntegerField(blank=True, null=True)
+    per_box_count = models.IntegerField(blank=True, null=True)
+    per_box_netweight = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    per_box_grossweight = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    unit_price = models.IntegerField(blank=True, null=True)
+    description = models.CharField(max_length=200, blank=True, null=True)
+
     updated_by = models.ForeignKey(
         User,
         on_delete=models.SET_DEFAULT,

@@ -113,6 +113,12 @@ class PurchaseCustomSchema(Schema):
     logo: Optional[str] = None
     bare_log: Optional[str] = None
     customs_remark: Optional[str] = None
+    description: Optional[str] = None
+    unit_price: Optional[int] = None
+    per_box_grossweight: Optional[float] = None
+    per_box_netweight: Optional[float] = None
+    per_box_count: Optional[int] = None
+    boxes_count: Optional[int] = None
 
 
 class JancodeParentChildMappingListSchema(Schema):
