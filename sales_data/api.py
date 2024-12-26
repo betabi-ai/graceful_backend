@@ -63,14 +63,14 @@ def get_jancode_sales_amount_infos(request, q: str = ""):
         LEFT JOIN 
             (
                 SELECT 
-                    sjsai.jan_code,  
-                    SUM(sjsai.sale_count) AS sale_count 
+                    sjsai.jan_cd as jan_code,  
+                    SUM(sjsai.amount) AS sale_count 
                 FROM 
-                    sales_jancode_sales_amount_infos sjsai
+                    order_details_calc sjsai
                 WHERE 
                     sjsai.order_month IN (%s, %s, %s)
                 GROUP BY 
-                    sjsai.jan_code
+                    sjsai.jan_cd
             ) AS sales_data
         ON 
             stock_data.jan_code = sales_data.jan_code
