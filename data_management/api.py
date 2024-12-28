@@ -5,11 +5,14 @@ from django.db.models import Q
 from django.conf import settings
 from itertools import groupby
 from operator import itemgetter
+from django.http import HttpResponse
 from ninja import Router, File
 from ninja_jwt.authentication import JWTAuth
 from ninja.files import UploadedFile
 from ninja.orm import create_schema
 from ninja.pagination import paginate, PageNumberPagination
+import openpyxl
+from openpyxl.styles import Alignment, Font
 
 
 from data_management.constant import (
@@ -633,6 +636,151 @@ def upload_purchase_custom(request, purchase_id: int, file: UploadedFile = File(
         return 422, {"message": "文件解码失败，请确保文件是 UTF-8 编码"}
     except Exception as e:
         return 422, {"message": f"处理文件时发生错误: {str(e)}"}
+
+
+# 生成报关数据 excel 文件
+@router.get(
+    "/purchases/custom/download/{int:purchase_id}",
+    tags=["datas_management"],
+)
+def download_purchase_custom(request, purchase_id: int):
+    purchase_info = PurchaseInfos.objects.filter(id=purchase_id).first()
+    if not purchase_info:
+        return 422, {"message": "没找到批次信息，请重试！"}
+
+    purchase_customs = PurchaseCustomInfos.objects.filter(purchase_id=purchase_id)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+
+    default_font = Font(size=10)
+
+    ws.merge_cells("A1:P1")
+    ws["A1"] = "DONGGUAN HZ IMP AND EXP CO.,LTD"
+
+    ws["A1"].font = Font(size=14, bold=True)
+
+    ws.merge_cells("A2:P2")
+    ws["A2"] = (
+        "Room 1303, Building 2, Nancheng Country Garden, No.16 Station Road, Nancheng Street, Dongguan City, Guangdong Province,China"
+    )
+    ws["A2"].font = Font(size=12)
+
+    ws.merge_cells("A3:P3")
+    ws["A3"] = "PACKING   LIST"
+    ws["A3"].font = Font(size=16)
+
+    ws.merge_cells("A4:H4")
+    ws["A4"] = "MESSRS:"
+    ws["A4"].font = default_font
+    ws["J4"] = "PORT :"
+    ws["J4"].font = default_font
+    ws["K4"] = "TOKYO"
+    ws["K4"].font = default_font
+
+    ws.merge_cells("A5:H5")
+    ws["A5"] = "Grace Co., Ltd."
+    ws["A5"].font = default_font
+    ws["J5"] = "V.V.:"
+    ws["J5"].font = default_font
+
+    ws.merge_cells("A6:H6")
+    ws["A6"] = "CHIBAKEN FUNABASHISHI NISHIURA 3-2-2"
+    ws["A6"].font = default_font
+    ws.merge_cells("J6:K6")
+    ws["J6"] = "Shipment:      FOB"
+    ws["J6"].font = default_font
+
+    ws.merge_cells("A7:H7")
+    ws["A7"] = "ATTN:Yu Rongkun 080-4338-7444"
+    ws["A7"].font = default_font
+    ws["J7"] = "INV. NO:"
+    ws["J7"].font = default_font
+
+    ws.append(
+        [
+            "记号\nMARK",
+            "描述\nDESCRIPTION",
+            "箱数\nCTNS",
+            "单箱数量\nQTY\n/inner ctn",
+            "总数量\nQty\n/Total CtnT",
+            "包装尺寸\ncarton\nSize\n(cm)",
+            "单箱体积\nMeas of\nouter Ctn\n(CBM)",
+            "总体积\nTotal\nMeas\n(CBM)",
+            "净重\nN.W/Ctn\n(KG)",
+            "总净重\nTotal N.W\n(KG)",
+            "毛重\nG.W/Ctn\n(KG)",
+            "总毛重(KG)\nTotal G.W",
+            "图片",
+            "单价\nUNIT\nPRICE\n(JPY)",
+            "总价\nAMOUNT\n(JPY)",
+            "材质(中文）\nMATERIAL",
+            "材质(英文）\nMATERIAL",
+            "中文品名",
+            "LOGO",
+            "备注",
+            "玻璃\n总面积\n(㎡)",
+        ]
+    )
+
+    # 获取刚刚添加的行号
+    last_row = ws.max_row
+
+    # 设置该行每个单元格的对齐方式为水平和垂直居中
+    for cell in ws[last_row]:
+        cell.alignment = Alignment(
+            horizontal="center", vertical="center", wrap_text=True
+        )
+        cell.font = Font(size=10, bold=True)
+
+    index = 9
+    for custom in purchase_customs:
+        ws.append(
+            [
+                custom.jan_code,
+                custom.description,
+                custom.boxes_count,
+                custom.per_box_count,
+                # custom.boxes_count * custom.per_box_count,
+                f"=C{index}*D{index}",
+                custom.carton_size,
+                eval(custom.carton_size) / 1000000,
+                f'=IF(G{index}=" "," ",G{index}*C{index})',
+                custom.per_box_netweight,
+                f"=I{index}*C{index}",
+                custom.per_box_grossweight,
+                f"=C{index}*K{index}",
+                "",
+                custom.unit_price,
+                f"=C{index}*K{index}",
+                custom.material_chinese,
+                custom.material_english,
+                custom.chinese_name,
+                custom.logo,
+                custom.customs_remark,
+                custom.glass_area,
+            ]
+        )
+        index += 1
+        last_row = ws.max_row
+
+        # 设置该行每个单元格的对齐方式为水平和垂直居中
+        for cell in ws[last_row]:
+            # cell.alignment = Alignment(
+            #     horizontal="center", vertical="center", wrap_text=True
+            # )
+            cell.font = Font(size=10)
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = (
+        f'attachment; filename="customs_{purchase_info.batch_code}.xlsx"'
+    )
+
+    wb.save(response)
+
+    return response
 
 
 # =========================== jancode_parent_child_mapping =================================
