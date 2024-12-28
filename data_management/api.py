@@ -646,11 +646,12 @@ def get_jancode_parent_child_mapping(request, q: str = ""):
     """
     获取 parent_code 的子 code 映射关系
     """
+
     query = Q()
     # 检查参数
     if q:
         # 查询条件：匹配 parent_jancode 或 child_jancode
-        query = Q(parent_jancode__icontains=q)
+        query &= Q(parent_jancode__icontains=q)
 
     # 查询数据并排序（groupby 要求有序）
     queryset = (
@@ -770,3 +771,6 @@ def upload_jancode_parent_child_mapping_file(request, file: UploadedFile = File(
         return 422, {"message": "文件解码失败，请确保文件是 UTF-8 编码"}
     except Exception as e:
         return 422, {"message": f"处理文件时发生错误: {str(e)}"}
+
+
+# =========================== itemcode_itemmanagecode_mapping =================================

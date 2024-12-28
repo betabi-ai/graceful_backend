@@ -737,3 +737,22 @@ class OrderDetailsCalc(models.Model):
     class Meta:
         managed = False
         db_table = "order_details_calc"
+
+
+# 商品管理番号（商品URL）与 商品番号 的对应关系 model
+class ItemcodeItemmanagecodeMapping(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    item_code = models.CharField(max_length=50)
+    manage_code = models.CharField(max_length=50)
+    updated_at = models.DateTimeField()
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="itemcode_itemmanagecode_updated_by",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = "itemcode_itemmanagecode_mapping"
