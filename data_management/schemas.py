@@ -123,3 +123,9 @@ class JancodeParentChildMappingListSchema(Schema):
     parent_jancode: str
     child_jancode: str
     product_price: float
+
+
+class ItemcodeItemmanagecodeMappingSchema(Schema):
+    id: Optional[int] = None
+    item_code: str
+    manage_code: str

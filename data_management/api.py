@@ -26,6 +26,7 @@ from data_management.schemas import (
     CreateNewGtinCodeSchema,
     GtinCodeInputSchema,
     GtinCodeSchema,
+    ItemcodeItemmanagecodeMappingSchema,
     JancodeParentChildMappingListSchema,
     ProductsSuppliersSchema,
     ProductsUpsertSchema,
@@ -35,6 +36,7 @@ from data_management.schemas import (
 )
 from shares.models import (
     GsoneJancode,
+    ItemcodeItemmanagecodeMapping,
     JancodeParentChildMapping,
     PurchaseCustomInfos,
     Products,
@@ -774,3 +776,53 @@ def upload_jancode_parent_child_mapping_file(request, file: UploadedFile = File(
 
 
 # =========================== itemcode_itemmanagecode_mapping =================================
+
+
+@router.get(
+    "/itemcode/itemmanagecode",
+    response=List[Any],
+    tags=["datas_management"],
+)
+@paginate(PageNumberPagination, page_size=_PAGE_SIZE)
+def get_itemcode_itemmanagecode_mapping(request, q: str = "", sort: str = "item_code"):
+
+    query = Q()
+    if q:
+        query &= Q(item_code__icontains=q) | Q(manage_code__icontains=q)
+
+    qs = (
+        ItemcodeItemmanagecodeMapping.objects.filter(query)
+        .values("item_code", "manage_code", "id")
+        .order_by(sort)
+    )
+
+    return qs
+
+
+@router.post(
+    "/itemcode/itemmanagecode/upsert",
+    response={200: ItemcodeItemmanagecodeMappingSchema, 422: Any},
+    tags=["datas_management"],
+)
+def upsert_itemcode_itemmanagecode_mapping(
+    request, data: ItemcodeItemmanagecodeMappingSchema
+):
+
+    query = Q(item_code=data.item_code) | Q(manage_code=data.manage_code)
+    itemcode_itemmanagecode_mapping = ItemcodeItemmanagecodeMapping.objects.filter(
+        query
+    ).first()
+    if itemcode_itemmanagecode_mapping:
+        return 422, {"message": "编码不能重复！"}
+
+    itemcode_itemmanagecode_mapping = data.dict()
+    user = request.user
+    if user:
+        itemcode_itemmanagecode_mapping["updated_by"] = user
+    new_itemcode_itemmanagecode_mapping, _ = (
+        ItemcodeItemmanagecodeMapping.objects.update_or_create(
+            id=data.id, defaults=itemcode_itemmanagecode_mapping
+        )
+    )
+
+    return new_itemcode_itemmanagecode_mapping
