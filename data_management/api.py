@@ -88,8 +88,12 @@ def get_products(
 
 @router.get("/products/all", response=List[Any], tags=["datas_management"])
 def get_all_products(request):
+    # return Products.objects.filter().values(
+    #     "id", "jan_code", "itemid", "product_name", "supplier_id", "product_price"
+    # )
+
     return Products.objects.filter().values(
-        "id", "jan_code", "itemid", "product_name", "supplier_id", "product_price"
+        "id", "jan_code", "itemid", "supplier_id", "product_price"
     )
 
 

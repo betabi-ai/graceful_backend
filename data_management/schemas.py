@@ -93,6 +93,7 @@ class PurchaseDetailsUpsertInputSchema(Schema):
     lamination_price: Optional[float] = None
     labor_cost: Optional[float] = None
     packaging_bag_price: Optional[float] = None
+    other_price: Optional[float] = None
 
 
 class PurchaseCustomSchema(Schema):

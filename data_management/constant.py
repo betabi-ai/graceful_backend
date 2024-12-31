@@ -58,6 +58,7 @@ PURCHASE_PRODUCT_UPLOAD_FIELDNAME_MAPPING = {
     "过塑(CNY)": "lamination_price",
     "人工(CNY)": "labor_cost",
     "包装袋(CNY)": "packaging_bag_price",
+    "其他(CNY)": "other_price",
     "税表番号": "tax_form_code",
     "関税率": "tariff_rate",
 }
@@ -78,6 +79,7 @@ PURCHASE_PRODUCT_UPLOAD_DEFAULT_VALUE = {
     "lamination_price": 0.0,
     "labor_cost": 0.0,
     "packaging_bag_price": 0.0,
+    "other_price": 0.0,
     "tax_form_code": "",
     "tariff_rate": 0.0,
 }
