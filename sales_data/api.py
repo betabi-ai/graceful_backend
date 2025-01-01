@@ -86,7 +86,6 @@ def get_jancode_sales_amount_infos(request, q: str = ""):
         cursor.execute(sql_query, params)
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
-        columns = [col[0] for col in cursor.description]
         # print(columns)
         results = [dict(zip(columns, row)) for row in rows]
         for result in results:
@@ -143,3 +142,28 @@ def get_jancode_sale_data_list(
     # print(qs)
 
     return qs
+
+
+# 获取所有店铺指定日期的销售数据
+@router.get(
+    "/shop_sales",
+    response=List[Any],
+    tags=["sale_datas"],
+)
+def get_shop_sales_data_list(request, delivery_date: str):
+    sql_query = """
+            select gs.shopname, gs.shop_code,sum(ss.amount_price) as amount_price, sum(ss.amount) as amount
+            from
+            graceful_shops gs left join 
+            sales_summary  ss on gs.shop_code = ss.shop_code and ss.delivery_date = %s
+            group by gs.shopname, gs.shop_code 
+            order by shop_code
+        """
+    # 执行查询
+    with connection.cursor() as cursor:
+        cursor.execute(sql_query, [delivery_date])
+        columns = [col[0] for col in cursor.description]
+        rows = cursor.fetchall()
+        # print(columns)
+        results = [dict(zip(columns, row)) for row in rows]
+    return results
