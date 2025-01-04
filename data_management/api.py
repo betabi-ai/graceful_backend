@@ -15,6 +15,7 @@ import openpyxl
 from openpyxl.styles import Alignment, Font
 
 
+from cpc.tasks import handle_spider
 from data_management.constant import (
     PRODUCT_DEFAULT_VALUES,
     PRODUCT_UPLOAD_FIELDNAME_MAPPING,
@@ -794,7 +795,6 @@ def download_purchase_custom(request, purchase_id: int):
     "/jancode/parent-child",
     response=List[Any],
     tags=["datas_management"],
-    auth=None,
 )
 def get_jancode_parent_child_mapping(request, q: str = ""):
     """
@@ -978,3 +978,19 @@ def upsert_itemcode_itemmanagecode_mapping(
     )
 
     return new_itemcode_itemmanagecode_mapping
+
+
+# 导出订单数据，并上传到google driver上
+@router.get(
+    "/export_orders",
+    response=Any,
+    tags=["datas_management"],
+)
+def export_orders_data(request):
+    print("export_orders_data====================")
+    result = handle_spider(
+        project="gracefulRakutenSpiders",
+        spider="google_driver_order_info_export",
+    )
+
+    return result
