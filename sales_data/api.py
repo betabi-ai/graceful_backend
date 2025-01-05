@@ -160,10 +160,11 @@ def get_shop_sales_data_list(request, delivery_date: str):
     #         order by shop_code
     #     """
     sql_query = """
-                select os.shop_code, os.shop_name as shopname,sum(os.subtotal_price) as amount_price, count(os.order_number) as amount from
+                select gs.shopname, gs.shop_code,sum(os.subtotal_price) as amount_price, count(os.order_number) as amount from
                 graceful_shops gs left join 
                 orders  os  on gs.shop_code = os.shop_code and   os.delivery_date = %s
-                group by os.shop_code, os.shop_name
+                group by gs.shopname, gs.shop_code
+                order by gs.shop_code
             """
     # 执行查询
     with connection.cursor() as cursor:
