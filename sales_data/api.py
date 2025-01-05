@@ -151,24 +151,57 @@ def get_jancode_sale_data_list(
     tags=["sale_datas"],
 )
 def get_shop_sales_data_list(request, delivery_date: str):
-    # sql_query = """
-    #         select gs.shopname, gs.shop_code,sum(ss.amount_price) as amount_price, sum(ss.amount) as amount
-    #         from
-    #         graceful_shops gs left join
-    #         sales_summary  ss on gs.shop_code = ss.shop_code and ss.delivery_date = %s
-    #         group by gs.shopname, gs.shop_code
-    #         order by shop_code
-    #     """
     sql_query = """
-                select gs.shopname, gs.shop_code,sum(os.subtotal_price) as amount_price, count(os.order_number) as amount from
-                graceful_shops gs left join 
-                orders  os  on gs.shop_code = os.shop_code and   os.delivery_date = %s
+                select gs.shopname, 
+                gs.shop_code,
+                sum(os.subtotal_price) as amount_price, 
+                count(os.order_number) as order_count
+                from
+                graceful_shops gs 
+                left join  orders  os  
+                    on gs.shop_code = os.shop_code and os.phase_name = '完了' and os.cancel_flag = 0 and  os.delivery_date = %s
                 group by gs.shopname, gs.shop_code
                 order by gs.shop_code
             """
     # 执行查询
     with connection.cursor() as cursor:
         cursor.execute(sql_query, [delivery_date])
+        columns = [col[0] for col in cursor.description]
+        rows = cursor.fetchall()
+        # print(columns)
+        results = [dict(zip(columns, row)) for row in rows]
+    return results
+
+
+# 获取指定日期的各店铺的销售数据
+@router.get(
+    "/shop_saledatas_detail",
+    response=List[Any],
+    tags=["sale_datas"],
+)
+def get_shop_saledatas(request, start: str, end: str, shop_code: str):
+    sql_query = """      
+            select gs.shop_code,
+            gs.shopname,
+            os.delivery_date,
+            sum(odc.amount_price) as amount_price,
+            count(os.order_number) as amount_count,
+            sum(odc.tax_price) as tax_price,
+            sum(odc.coupon) as coupon,
+            sum(odc.rewards) as rewards
+            from 
+            graceful_shops gs 
+            left join orders os on gs.shop_code = os.shop_code  and os.delivery_date between %s and %s 
+            and os.phase_name = '完了' and os.cancel_flag = 0   and detail_downloaded=true
+            left join order_details_calc odc on odc.order_number = os.order_number
+            where  os.shop_code = %s
+            group by gs.shop_code,gs.shopname,os.delivery_date
+            order by os.delivery_date
+        """
+
+    # 执行查询
+    with connection.cursor() as cursor:
+        cursor.execute(sql_query, [start, end, shop_code])
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
         # print(columns)
