@@ -37,6 +37,7 @@ from data_management.schemas import (
     PurchaseCustomSchema,
     PurchaseDetailsUpsertInputSchema,
     PurchaseInfosSchema,
+    RPPDiscountInfosInputSchema,
 )
 from shares.models import (
     GsoneJancode,
@@ -47,6 +48,7 @@ from shares.models import (
     ProductsSuppliers,
     PurchaseDetails,
     PurchaseInfos,
+    RppDiscountInfos,
 )
 
 router = Router(auth=JWTAuth())
@@ -980,6 +982,45 @@ def upsert_itemcode_itemmanagecode_mapping(
     return new_itemcode_itemmanagecode_mapping
 
 
+# ========================== rpp_discount_infos =================================
+
+
+@router.get(
+    "/rpp_discount_infos",
+    response=List[RPPDiscountInfosInputSchema],
+    tags=["datas_management"],
+)
+def get_rpp_discount_infos(request, shop_id: str = "", month: str = ""):
+    query = Q()
+    if shop_id:
+        query &= Q(shopid=shop_id)
+    if month:
+        query &= Q(effect_month=month)
+
+    qs = RppDiscountInfos.objects.filter(query).order_by("-effect_month")
+    print(qs.query)
+    return qs
+
+
+@router.post(
+    "/rpp_discount_infos/upsert",
+    response={200: RPPDiscountInfosInputSchema, 422: Any},
+    tags=["datas_management"],
+)
+def upsert_rpp_discount_infos(request, data: RPPDiscountInfosInputSchema):
+
+    rrpDiscountInfo = data.dict()
+    user = request.user
+    if user:
+        rrpDiscountInfo["updated_by"] = user
+    new_rrpDiscountInfo, _ = RppDiscountInfos.objects.update_or_create(
+        id=data.id, defaults=rrpDiscountInfo
+    )
+
+    return new_rrpDiscountInfo
+
+
+# ========================== export_orders_data =================================
 # 导出订单数据，并上传到google driver上
 @router.get(
     "/export_orders",

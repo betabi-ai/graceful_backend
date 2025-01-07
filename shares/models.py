@@ -759,3 +759,25 @@ class ItemcodeItemmanagecodeMapping(models.Model):
     class Meta:
         managed = False
         db_table = "itemcode_itemmanagecode_mapping"
+
+
+class RppDiscountInfos(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    shopid = models.CharField(max_length=20)
+    shop_name = models.CharField(max_length=50)
+    effect_month = models.DateField()
+    discount_rate = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    updated_at = models.DateTimeField()
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="rpp_discount_infos_updated_by",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = "rpp_discount_infos"

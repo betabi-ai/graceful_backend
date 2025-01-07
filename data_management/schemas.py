@@ -130,3 +130,11 @@ class ItemcodeItemmanagecodeMappingSchema(Schema):
     id: Optional[int] = None
     item_code: str
     manage_code: str
+
+
+class RPPDiscountInfosInputSchema(Schema):
+    id: Optional[int] = None
+    shopid: str
+    shop_name: str
+    effect_month: date
+    discount_rate: float
