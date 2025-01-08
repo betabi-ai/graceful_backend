@@ -97,6 +97,7 @@ class PurchaseDetailsUpsertInputSchema(Schema):
     labor_cost: Optional[float] = None
     packaging_bag_price: Optional[float] = None
     other_price: Optional[float] = None
+    price_datas: Optional[Dict[str, float]] = {}
 
 
 class PurchaseCustomSchema(Schema):

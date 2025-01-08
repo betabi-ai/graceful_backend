@@ -523,6 +523,9 @@ class PurchaseDetails(models.Model):
     other_price = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
     )
+    # 价格对象
+    price_datas = models.JSONField(blank=True, null=True)
+
     updated_at = models.DateTimeField(blank=True, null=True)
     updated_by = models.ForeignKey(
         User,
