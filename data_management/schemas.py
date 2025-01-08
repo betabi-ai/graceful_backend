@@ -138,3 +138,11 @@ class RPPDiscountInfosInputSchema(Schema):
     shop_name: str
     effect_month: date
     discount_rate: float
+
+
+class GracefulShopsSchema(Schema):
+    id: Optional[int] = None
+    shopid: str
+    shop_code: str
+    shopname: str
+    shop_platform: int

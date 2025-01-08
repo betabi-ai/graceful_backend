@@ -28,6 +28,7 @@ from data_management.tools import fill_defaults, generate_gs_one_jancodes
 
 from data_management.schemas import (
     CreateNewGtinCodeSchema,
+    GracefulShopsSchema,
     GtinCodeInputSchema,
     GtinCodeSchema,
     ItemcodeItemmanagecodeMappingSchema,
@@ -40,6 +41,7 @@ from data_management.schemas import (
     RPPDiscountInfosInputSchema,
 )
 from shares.models import (
+    GracefulShops,
     GsoneJancode,
     ItemcodeItemmanagecodeMapping,
     JancodeParentChildMapping,
@@ -1009,7 +1011,15 @@ def get_rpp_discount_infos(request, shop_id: str = "", month: str = ""):
 )
 def upsert_rpp_discount_infos(request, data: RPPDiscountInfosInputSchema):
 
+    if not data.id:
+        info = RppDiscountInfos.objects.filter(
+            shopid=data.shopid, effect_month=data.effect_month
+        ).first()
+        if info:
+            return 422, {"message": "已存在相同月份的数据！！"}
+
     rrpDiscountInfo = data.dict()
+    print(rrpDiscountInfo)
     user = request.user
     if user:
         rrpDiscountInfo["updated_by"] = user
@@ -1035,3 +1045,19 @@ def export_orders_data(request):
     )
 
     return result
+
+
+# ========================== graceful_shops =================================
+
+
+@router.get(
+    "/graceful_shops",
+    response=List[GracefulShopsSchema],
+    tags=["datas_management"],
+)
+def get_graceful_shops(request, platform: int = None):
+    if platform:
+        return GracefulShops.objects.filter(shop_platform=platform).order_by(
+            "shop_code"
+        )
+    return GracefulShops.objects.filter().order_by("shop_code")

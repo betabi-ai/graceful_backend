@@ -781,3 +781,19 @@ class RppDiscountInfos(models.Model):
     class Meta:
         managed = False
         db_table = "rpp_discount_infos"
+
+
+class GracefulShops(models.Model):
+    shopid = models.CharField(max_length=20)
+    shopname = models.CharField(max_length=50)
+    shop_login_id1 = models.CharField(max_length=50, blank=True, null=True)
+    shop_login_pw1 = models.CharField(max_length=50, blank=True, null=True)
+    shop_login_id2 = models.CharField(max_length=50, blank=True, null=True)
+    shop_login_pw2 = models.CharField(max_length=50, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    shop_code = models.CharField(max_length=10, blank=True, null=True)
+    shop_platform = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "graceful_shops"
