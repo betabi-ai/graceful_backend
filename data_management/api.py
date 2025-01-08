@@ -34,6 +34,7 @@ from data_management.schemas import (
     ItemcodeItemmanagecodeMappingSchema,
     JancodeParentChildMappingListSchema,
     ProductCategoriesSchema,
+    ProductsSchema,
     ProductsSuppliersSchema,
     ProductsUpsertSchema,
     PurchaseCustomSchema,
@@ -58,7 +59,10 @@ from shares.models import (
 router = Router(auth=JWTAuth())
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
 
-ProductsSchema = create_schema(Products, exclude=["updated_by", "created_at"])
+# ProductsSchema = create_schema(
+#     Products,
+#     exclude=["updated_by", "created_at"],
+# )
 
 
 # =========================== products =================================
@@ -113,6 +117,14 @@ def get_product_with_jancode(request, jancode: str):
 def upsert_product(request, data: ProductsUpsertSchema):
 
     product = data.dict()
+
+    # 获取或创建 category 实例
+    category_data = product.pop("category", None)
+    if category_data:
+        category = ProductCategories.objects.filter(id=category_data.get("id")).first()
+        product["category"] = category
+
+    print(product)
     user = request.user
     if user:
         product["updated_by"] = user
@@ -1108,27 +1120,51 @@ def upsert_product_categories(request, data: ProductCategoriesSchema):
     response=List[Any],
     tags=["datas_management"],
 )
-def get_product_categories(request):
-    categories = ProductCategories.objects.all().values(
-        "id",
-        "category_name",
-        "parent_id",
-        "parent__category_name",  # 原始字段名称
-        "category_level",
-        "price_template",
-    )
+def get_product_categories(request, wpricetemplate: bool = True):
 
-    # 重命名字段
-    simplified_categories = [
-        {
-            "id": category["id"],
-            "category_name": category["category_name"],
-            "parent_id": category["parent_id"],
-            "parent_name": category["parent__category_name"],  # 重命名
-            "category_level": category["category_level"],
-            "price_template": category["price_template"],
-        }
-        for category in categories
-    ]
+    if wpricetemplate:
+
+        categories = ProductCategories.objects.all().values(
+            "id",
+            "category_name",
+            "parent_id",
+            "parent__category_name",  # 原始字段名称
+            "category_level",
+            "price_template",
+        )
+
+        # 重命名字段
+        simplified_categories = [
+            {
+                "id": category["id"],
+                "category_name": category["category_name"],
+                "parent_id": category["parent_id"],
+                "parent_name": category["parent__category_name"],  # 重命名
+                "category_level": category["category_level"],
+                "price_template": category["price_template"],
+            }
+            for category in categories
+        ]
+
+    else:
+        categories = ProductCategories.objects.all().values(
+            "id",
+            "category_name",
+            "parent_id",
+            "parent__category_name",  # 原始字段名称
+            "category_level",
+        )
+
+        # 重命名字段
+        simplified_categories = [
+            {
+                "id": category["id"],
+                "category_name": category["category_name"],
+                "parent_id": category["parent_id"],
+                "parent_name": category["parent__category_name"],  # 重命名
+                "category_level": category["category_level"],
+            }
+            for category in categories
+        ]
 
     return simplified_categories

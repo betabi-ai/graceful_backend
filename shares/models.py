@@ -374,6 +374,13 @@ class Products(models.Model):
     gtin_code = models.CharField(max_length=13, blank=True, null=True)
     bare_code = models.CharField(max_length=20, blank=True, null=True)
     item_count = models.IntegerField(blank=True, null=True)
+    category = models.ForeignKey(
+        "ProductCategories",
+        on_delete=models.DO_NOTHING,  # 当 ProductCategories 被删除时不做任何修改
+        blank=True,
+        null=True,
+        related_name="related_categories",
+    )
     stock_quantity = models.IntegerField(blank=True, null=True)
     compatible_models = models.CharField(max_length=200, blank=True, null=True)
     attribute = models.CharField(max_length=200, blank=True, null=True)

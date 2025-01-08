@@ -3,6 +3,8 @@ from typing import Optional, List, Dict
 from ninja import ModelSchema, Schema
 from pydantic import field_validator
 
+from shares.schemas import ProductCategoriesSimpleSchema
+
 
 # Create your models here.
 class ProductsSuppliersSchema(Schema):
@@ -19,6 +21,7 @@ class ProductsUpsertSchema(Schema):
     product_name: Optional[str] = None
     product_price: Optional[float] = None
     bare_code: Optional[str] = None
+    category: Optional[ProductCategoriesSimpleSchema] = None
     item_count: int = 1
     compatible_models: Optional[str] = None
     attribute: Optional[str] = None
@@ -154,3 +157,30 @@ class ProductCategoriesSchema(Schema):
     parent_id: Optional[int] = None
     category_level: int
     price_template: Optional[Dict[str, float]] = {}
+
+
+class ProductsSchema(Schema):
+    id: Optional[int] = None
+    itemid: str
+    jan_code: str
+    product_price: int
+    product_name: Optional[str] = None
+    gtin_code: Optional[str] = None
+    bare_code: Optional[str] = None
+    item_count: Optional[int] = None
+    category: Optional[ProductCategoriesSimpleSchema] = None  # 嵌套的分类信息
+    stock_quantity: Optional[int] = None
+    compatible_models: Optional[str] = None
+    attribute: Optional[str] = None
+    status: int
+    weight: Optional[float] = None  # Decimal 转为 float
+    adapter_desc: Optional[str] = None
+    box_properties_desc: Optional[str] = None
+    notices_desc: Optional[str] = None
+    packaging_desc: Optional[str] = None
+    alcohol_pack_desc: Optional[str] = None
+    supplier_id: Optional[int] = None
+    min_order_quantity: Optional[int] = None
+
+    class Config:
+        orm_mode = True
