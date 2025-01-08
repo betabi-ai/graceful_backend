@@ -797,3 +797,29 @@ class GracefulShops(models.Model):
     class Meta:
         managed = False
         db_table = "graceful_shops"
+
+
+class ProductCategories(models.Model):
+    category_name = models.CharField(max_length=50)
+    # parent_id = models.IntegerField(blank=True, null=True)
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="subcategories",
+    )
+    category_level = models.IntegerField()
+    price_template = models.JSONField(null=True, blank=True)
+    updated_at = models.DateTimeField()
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="product_categories_updated_by",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = "product_categories"

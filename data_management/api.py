@@ -33,6 +33,7 @@ from data_management.schemas import (
     GtinCodeSchema,
     ItemcodeItemmanagecodeMappingSchema,
     JancodeParentChildMappingListSchema,
+    ProductCategoriesSchema,
     ProductsSuppliersSchema,
     ProductsUpsertSchema,
     PurchaseCustomSchema,
@@ -45,6 +46,7 @@ from shares.models import (
     GsoneJancode,
     ItemcodeItemmanagecodeMapping,
     JancodeParentChildMapping,
+    ProductCategories,
     PurchaseCustomInfos,
     Products,
     ProductsSuppliers,
@@ -1061,3 +1063,72 @@ def get_graceful_shops(request, platform: int = None):
             "shop_code"
         )
     return GracefulShops.objects.filter().order_by("shop_code")
+
+
+# ========================== product_categories =================================
+
+
+# 添加或更新商品类目
+@router.post(
+    "/categories/upsert",
+    response={200: ProductCategoriesSchema, 422: Any},
+    tags=["datas_management"],
+)
+def upsert_product_categories(request, data: ProductCategoriesSchema):
+
+    if not data.id:
+        info = ProductCategories.objects.filter(
+            category_name=data.category_name,
+            category_level=data.category_level,
+            parent_id=data.parent_id,
+        ).first()
+        if info:
+            return 422, {"message": "类目名称已经存在！"}
+    query = (
+        Q(category_name=data.category_name)
+        & Q(category_level=data.category_level)
+        & Q(parent_id=data.parent_id)
+    )
+
+    product_categories = data.dict()
+
+    user = request.user
+    if user:
+        product_categories["updated_by"] = user
+    new_product_categories, _ = ProductCategories.objects.update_or_create(
+        id=data.id, defaults=product_categories
+    )
+
+    return new_product_categories
+
+
+# 获取所有商品类目
+@router.get(
+    "/categories",
+    response=List[Any],
+    tags=["datas_management"],
+)
+def get_product_categories(request):
+    categories = ProductCategories.objects.all().values(
+        "id",
+        "category_name",
+        "parent_id",
+        "parent__category_name",  # 原始字段名称
+        "category_level",
+        "price_template",
+    )
+
+    # 重命名字段
+    simplified_categories = [
+        {
+            "id": category["id"],
+            "category_name": category["category_name"],
+            "parent_id": category["parent_id"],
+            "parent_name": category["parent__category_name"],  # 重命名
+            "category_level": category["category_level"],
+            "price_template": category["price_template"],
+        }
+        for category in categories
+    ]
+
+    return simplified_categories

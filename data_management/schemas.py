@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional, List
+from typing import Optional, List, Dict
 from ninja import ModelSchema, Schema
 from pydantic import field_validator
 
@@ -146,3 +146,11 @@ class GracefulShopsSchema(Schema):
     shop_code: str
     shopname: str
     shop_platform: int
+
+
+class ProductCategoriesSchema(Schema):
+    id: Optional[int] = None
+    category_name: str
+    parent_id: Optional[int] = None
+    category_level: int
+    price_template: Optional[Dict[str, float]] = {}
