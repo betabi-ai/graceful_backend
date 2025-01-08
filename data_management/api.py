@@ -992,14 +992,14 @@ def upsert_itemcode_itemmanagecode_mapping(
     response=List[RPPDiscountInfosInputSchema],
     tags=["datas_management"],
 )
-def get_rpp_discount_infos(request, shop_id: str = "", month: str = ""):
+def get_rpp_discount_infos(request, shop: str = "", month: str = ""):
     query = Q()
-    if shop_id:
-        query &= Q(shopid=shop_id)
+    if shop and shop != "-1":
+        query &= Q(shopid=shop)
     if month:
         query &= Q(effect_month=month)
 
-    qs = RppDiscountInfos.objects.filter(query).order_by("-effect_month")
+    qs = RppDiscountInfos.objects.filter(query).order_by("shopid", "-effect_month")
     print(qs.query)
     return qs
 
