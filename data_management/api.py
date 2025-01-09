@@ -1,3 +1,4 @@
+from collections import defaultdict
 import csv
 from io import StringIO
 from typing import Any, List
@@ -543,6 +544,93 @@ def upload_purchase_product(request, purchase_id: int, file: UploadedFile = File
         return 422, {"message": "文件解码失败，请确保文件是 UTF-8 编码"}
     except Exception as e:
         return 422, {"message": f"处理文件时发生错误: {str(e)}"}
+
+
+@router.post(
+    "/purchases/jancodes/upload/{int:purchase_id}",
+    response={200: Any, 422: Any},
+    tags=["datas_management"],
+)
+def upload_purchase_jancodes(request, purchase_id: int, file: UploadedFile = File(...)):
+    # 读取并解码文件内容
+    file_content = file.read().decode("utf-8")
+    csv_reader = csv.DictReader(StringIO(file_content))
+
+    # 检查文件是否包含必要字段
+    required_fields = {"JANCODE"}
+    if not required_fields.issubset(csv_reader.fieldnames):
+        missing_fields = required_fields - set(csv_reader.fieldnames or [])
+        return 422, {"message": f"缺少必要字段: {', '.join(missing_fields)}"}
+
+    jan_codes = set()
+
+    for row in csv_reader:
+
+        # 去除空行
+        if not any(row.values()):
+            continue
+
+        jan_code = row["JANCODE"]
+        if not jan_code:
+            continue
+
+        jan_codes.add(jan_code)
+
+    # 查询所有包含在 jan_codes 中的产品，并预取对应的 category 信息
+    products = Products.objects.filter(jan_code__in=jan_codes).select_related(
+        "category"
+    )
+
+    # print(products)
+
+    # 使用 set 找到所有查询到的 jan_code
+    queried_jan_codes = {product.jan_code for product in products}
+
+    # print(queried_jan_codes)
+
+    # 找到没有匹配到的 jan_code
+    uncategorized_jan_codes = set(jan_codes) - queried_jan_codes
+
+    # 使用 defaultdict 按 category 进行分组
+    grouped_data = defaultdict(list)
+    for product in products:
+        category_id = product.category.id if product.category else "Uncategorized"
+        grouped_data[category_id].append(product.jan_code)
+
+    # 如果存在没有匹配 category 的 jan_code，将它们加入 "Uncategorized"
+    if uncategorized_jan_codes:
+        grouped_data["Uncategorized"].extend(uncategorized_jan_codes)
+
+    wb = openpyxl.Workbook()
+
+    for category_id, jan_codes in grouped_data.items():
+        print(category_id, jan_codes)
+        category = ProductCategories.objects.filter(id=category_id).first()
+        print(category.category_name, category.price_template)
+        price_template = category.price_template or {}
+
+        header_writed = False
+        sheet = wb.create_sheet(category.category_name)
+        for jan_code in jan_codes:
+
+            data = {"jan_code": jan_code, "count": 0, **price_template}
+
+            if not header_writed:
+                # 写入表头
+                headers = data.keys()
+                sheet.append(list(headers))
+                header_writed = True
+
+            sheet.append(list(data.values()))
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="purchase_jancodes.xlsx"'
+
+    wb.save(response)
+
+    return response
 
 
 # =========================== purchase_custom_infos =================================
