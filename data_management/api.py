@@ -546,23 +546,26 @@ def upload_purchase_product(request, purchase_id: int, file: UploadedFile = File
         return 422, {"message": f"处理文件时发生错误: {str(e)}"}
 
 
+# 上传 jancode 清单文件，然后生成 进货数据xlsx文件
 @router.post(
-    "/purchases/jancodes/upload/{int:purchase_id}",
+    "/purchases/jancodes/upload",
     response={200: Any, 422: Any},
     tags=["datas_management"],
 )
-def upload_purchase_jancodes(request, purchase_id: int, file: UploadedFile = File(...)):
+def upload_purchase_jancodes(request, file: UploadedFile = File(...)):
     # 读取并解码文件内容
     file_content = file.read().decode("utf-8")
     csv_reader = csv.DictReader(StringIO(file_content))
 
     # 检查文件是否包含必要字段
-    required_fields = {"JANCODE"}
+    required_fields = {"JANコード", "进货数量"}
     if not required_fields.issubset(csv_reader.fieldnames):
         missing_fields = required_fields - set(csv_reader.fieldnames or [])
         return 422, {"message": f"缺少必要字段: {', '.join(missing_fields)}"}
 
     jan_codes = set()
+
+    jancode_count_dict = {}
 
     for row in csv_reader:
 
@@ -570,9 +573,12 @@ def upload_purchase_jancodes(request, purchase_id: int, file: UploadedFile = Fil
         if not any(row.values()):
             continue
 
-        jan_code = row["JANCODE"]
-        if not jan_code:
+        jan_code = row["JANコード"]
+        jan_count = row["进货数量"]
+        if not jan_code or not jan_count:
             continue
+
+        jancode_count_dict[jan_code] = jan_count
 
         jan_codes.add(jan_code)
 
@@ -602,18 +608,23 @@ def upload_purchase_jancodes(request, purchase_id: int, file: UploadedFile = Fil
         grouped_data["Uncategorized"].extend(uncategorized_jan_codes)
 
     wb = openpyxl.Workbook()
+    wb.remove(wb.active)
 
     for category_id, jan_codes in grouped_data.items():
-        print(category_id, jan_codes)
+        # print(category_id, jan_codes)
         category = ProductCategories.objects.filter(id=category_id).first()
-        print(category.category_name, category.price_template)
+        # print(category.category_name, category.price_template)
         price_template = category.price_template or {}
 
         header_writed = False
         sheet = wb.create_sheet(category.category_name)
         for jan_code in jan_codes:
 
-            data = {"jan_code": jan_code, "count": 0, **price_template}
+            data = {
+                "JANコード": jan_code,
+                "进货数量": jancode_count_dict[jan_code],
+                **price_template,
+            }
 
             if not header_writed:
                 # 写入表头
