@@ -484,6 +484,7 @@ class PurchaseDetails(models.Model):
         max_digits=10, decimal_places=2, blank=True, null=True
     )
     supplier_id = models.IntegerField(blank=True, null=True)
+    remaining_quantity = models.IntegerField(blank=True, null=True)
 
     # 价格对象
     price_datas = models.JSONField(blank=True, null=True)

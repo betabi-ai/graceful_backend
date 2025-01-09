@@ -524,6 +524,7 @@ def upload_purchase_product(request, purchase_id: int, file: UploadedFile = File
                         "quantity": jan_count,
                         "exchange_rate": purchase_info.exchange_rate,
                         "supplier_id": product.supplier_id,
+                        "remaining_quantity": jan_count,
                         "price_datas": {},
                     }
 
