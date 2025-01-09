@@ -1,6 +1,6 @@
 from collections import defaultdict
 import csv
-from io import StringIO
+from io import BytesIO, StringIO
 from typing import Any, List
 from django.db.models import Q
 from django.conf import settings
@@ -22,8 +22,6 @@ from data_management.constant import (
     PRODUCT_UPLOAD_FIELDNAME_MAPPING,
     PURCHASE_CUSTOM_UPLOAD_DEFAULT_VALUE,
     PURCHASE_CUSTOM_UPLOAD_FIELDNAME_MAPPING,
-    PURCHASE_PRODUCT_UPLOAD_DEFAULT_VALUE,
-    PURCHASE_PRODUCT_UPLOAD_FIELDNAME_MAPPING,
 )
 from data_management.tools import fill_defaults, generate_gs_one_jancodes
 
@@ -461,6 +459,7 @@ def upsert_purchase_product(request, data: PurchaseDetailsUpsertInputSchema):
     return new_info
 
 
+# 上传 进货批次的商品数据
 @router.post(
     "/purchases/product/upload/{int:purchase_id}",
     response={200: Any, 422: Any},
@@ -468,75 +467,85 @@ def upsert_purchase_product(request, data: PurchaseDetailsUpsertInputSchema):
 )
 def upload_purchase_product(request, purchase_id: int, file: UploadedFile = File(...)):
     """
-    上传 商品数据 文件
+    上传 进货批次的商品数据文件
     """
     try:
-
+        print(".......purchase_id:", purchase_id)
         purchase_info = PurchaseInfos.objects.filter(id=purchase_id).first()
         if not purchase_info:
             return 422, {"message": "没找到批次信息，请重试！"}
 
         # 读取并解码文件内容
-        file_content = file.read().decode("utf-8")
-        csv_reader = csv.DictReader(StringIO(file_content))
+        file_content = file.read()
+        # csv_reader = csv.DictReader(StringIO(file_content))
+        wb = openpyxl.load_workbook(filename=BytesIO(file_content))
 
-        # 替换字段名
-        csv_reader.fieldnames = [
-            PURCHASE_PRODUCT_UPLOAD_FIELDNAME_MAPPING.get(field, field)
-            for field in csv_reader.fieldnames
-        ]
+        sheetnames = wb.sheetnames
 
-        # 检查文件是否包含必要字段
-        required_fields = {"jan_code", "quantity"}
-        if not required_fields.issubset(csv_reader.fieldnames):
-            missing_fields = required_fields - set(csv_reader.fieldnames or [])
-            return 422, {"message": f"缺少必要字段: {', '.join(missing_fields)}"}
-
-        # 解析并处理数据
         user = request.user
 
-        products = []
-        for row in csv_reader:
+        for sheetname in sheetnames:
+            print(".......sheetname:", sheetname)
+            sheet = wb[sheetname]
+            rows = []
 
-            # 去除空行
-            if not any(row.values()):
+            # 获取表头（第一行）
+            headers = [cell.value for cell in sheet[1] if cell is not None]
+
+            # {"JANコード", "进货数量"}
+            if "JANコード" not in headers or "进货数量" not in headers:
                 continue
 
-            jan_code = row["jan_code"]
-            if not jan_code:
-                continue
+            # 遍历数据行
+            for row in sheet.iter_rows(min_row=2, values_only=True):  # 从第二行开始
+                row_data = {}
+                for header, cell in zip(headers, row):
+                    print(header, cell)
+                    # 只将非空的值添加到字典中
+                    if cell is not None:
+                        row_data[header] = cell
+                if row_data:  # 如果有有效的 key-value 则添加到 rows
 
-            product = Products.objects.filter(jan_code=jan_code).first()
-            if not product:
-                continue
+                    jan_code = row_data.get("JANコード")
+                    jan_count = row_data.get("进货数量")
 
-            new_product = fill_defaults(row, PURCHASE_PRODUCT_UPLOAD_DEFAULT_VALUE)
+                    if not jan_code or not jan_count:
+                        continue
 
-            if user:
-                products.append(
-                    PurchaseDetails(
-                        **new_product,
-                        purchase_id=purchase_id,
-                        product_id=product.id,
-                        supplier_id=product.supplier_id,
-                        batch_code=purchase_info.batch_code,
-                        exchange_rate=purchase_info.exchange_rate,
-                        updated_by=user,
-                    )
-                )
-            else:
-                products.append(
-                    PurchaseDetails(
-                        **new_product,
-                        product_id=product.id,
-                        batch_code=purchase_info.batch_code,
-                        supplier_id=product.supplier_id,
-                        exchange_rate=purchase_info.exchange_rate,
-                        purchase_id=purchase_id,
-                    )
-                )
+                    product = Products.objects.filter(jan_code=jan_code).first()
+                    if not product:
+                        continue
 
-        PurchaseDetails.objects.bulk_create(products)
+                    data = {
+                        "jan_code": jan_code,
+                        "product_id": product.id,
+                        "purchase_id": purchase_id,
+                        "batch_code": purchase_info.batch_code,
+                        "quantity": jan_count,
+                        "exchange_rate": purchase_info.exchange_rate,
+                        "supplier_id": product.supplier_id,
+                        "price_datas": {},
+                    }
+
+                    price_datas = row_data
+                    del price_datas["JANコード"]
+                    del price_datas["进货数量"]
+
+                    data["price_datas"] = price_datas
+
+                    if user:
+                        rows.append(
+                            PurchaseDetails(
+                                **data,
+                                updated_by=user,
+                            )
+                        )
+                    else:
+                        rows.append(PurchaseDetails(**data))
+
+            PurchaseDetails.objects.bulk_create(rows)
+
+            print(".......rows:", rows)
 
         return 200, {"message": f"上传成功！！！"}
 
