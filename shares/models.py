@@ -484,45 +484,7 @@ class PurchaseDetails(models.Model):
         max_digits=10, decimal_places=2, blank=True, null=True
     )
     supplier_id = models.IntegerField(blank=True, null=True)
-    bare_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    alcohol_bag_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    envelope = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    instruction_manual_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    adapter_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    packaging_box_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    plastic_packaging_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    scratch_card_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    wax_pager_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    lamination_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    labor_cost = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    packaging_bag_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    other_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
+
     # 价格对象
     price_datas = models.JSONField(blank=True, null=True)
 

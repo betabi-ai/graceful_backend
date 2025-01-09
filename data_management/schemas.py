@@ -84,19 +84,6 @@ class PurchaseDetailsUpsertInputSchema(Schema):
     tax_form_code: Optional[str] = None
     tariff_rate: Optional[float] = None
     supplier_id: Optional[int] = None
-    bare_price: Optional[float] = None
-    alcohol_bag_price: Optional[float] = None
-    envelope: Optional[float] = None
-    instruction_manual_price: Optional[float] = None
-    adapter_price: Optional[float] = None
-    packaging_box_price: Optional[float] = None
-    plastic_packaging_price: Optional[float] = None
-    scratch_card_price: Optional[float] = None
-    wax_pager_price: Optional[float] = None
-    lamination_price: Optional[float] = None
-    labor_cost: Optional[float] = None
-    packaging_bag_price: Optional[float] = None
-    other_price: Optional[float] = None
     price_datas: Optional[Dict[str, float]] = {}
 
 
