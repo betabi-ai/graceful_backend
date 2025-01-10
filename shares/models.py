@@ -796,3 +796,50 @@ class ProductCategories(models.Model):
     class Meta:
         managed = False
         db_table = "product_categories"
+
+
+# 销售月汇总
+class SalesPageMonthsSummary(models.Model):
+    """销售月汇总"""
+
+    shopid = models.CharField(max_length=20)
+    shop_code = models.CharField(max_length=20, blank=True, null=True)
+    effect_month = models.DateField(blank=True, null=True)
+    item_code = models.CharField(max_length=50, blank=True, null=True)
+    manage_code = models.CharField(max_length=50, blank=True, null=True)
+    amount_price = models.DecimalField(
+        max_digits=16, decimal_places=2, blank=True, null=True
+    )
+    jan_count = models.IntegerField(blank=True, null=True)
+    order_count = models.IntegerField(blank=True, null=True)
+    tax_price = models.DecimalField(
+        max_digits=16, decimal_places=2, blank=True, null=True
+    )
+    coupon = models.DecimalField(max_digits=14, decimal_places=2, blank=True, null=True)
+    shipping_fee = models.DecimalField(
+        max_digits=14, decimal_places=2, blank=True, null=True
+    )
+    afl_rewards = models.DecimalField(
+        max_digits=14, decimal_places=2, blank=True, null=True
+    )
+    afl_order_count = models.IntegerField(blank=True, null=True)
+    total720hgms = models.IntegerField(blank=True, null=True)
+    total720hcv = models.IntegerField(blank=True, null=True)
+    ca_actual_amount = models.IntegerField(blank=True, null=True)
+    ca_sales_count = models.IntegerField(blank=True, null=True)
+    advertisingfees = models.IntegerField(blank=True, null=True)
+    deal_sales_value = models.IntegerField(blank=True, null=True)
+    rmail_chargefee = models.IntegerField(blank=True, null=True)
+    pointsawarded = models.IntegerField(blank=True, null=True)
+    updated_at = models.DateTimeField()
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="sales_page_months_summary_updated_by",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = "sales_page_months_summary"
