@@ -18,6 +18,7 @@ class SalesPageMonthsSummarySchema(Schema):
     tax_price: Optional[float] = None
     coupon: Optional[float] = None
     shipping_fee: Optional[float] = None
+    total_orginal_price: Optional[float] = None
     afl_rewards: Optional[float] = None
     afl_order_count: Optional[int] = None
     total720hgms: Optional[int] = None

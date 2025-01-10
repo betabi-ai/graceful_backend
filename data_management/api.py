@@ -1181,9 +1181,9 @@ def export_orders_data(request):
 def get_graceful_shops(request, platform: int = None):
     if platform:
         return GracefulShops.objects.filter(shop_platform=platform).order_by(
-            "shop_code"
+            "shop_platform", "shop_code"
         )
-    return GracefulShops.objects.filter().order_by("shop_code")
+    return GracefulShops.objects.filter().order_by("shop_platform", "shop_code")
 
 
 # ========================== product_categories =================================
