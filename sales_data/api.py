@@ -9,8 +9,9 @@ from django.db.models import Q, Sum, F
 from ninja.pagination import paginate, PageNumberPagination
 from django.conf import settings
 
-from shares.models import OrderDetailsCalc
-from shares.time_utils import get_previous_months_first_day
+from sales_data.schemas import SalesPageMonthsSummarySchema
+from shares.models import OrderDetailsCalc, SalesPageMonthsSummary
+from shares.time_utils import get_date_first_month_day, get_previous_months_first_day
 
 router = Router(auth=JWTAuth())
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
@@ -236,3 +237,30 @@ def get_shop_saledatas(
         # print(columns)
         results = [dict(zip(columns, row)) for row in rows]
     return results
+
+
+# 获取指定店铺的指定月份的商品页面的销售数据
+@router.get(
+    "/month_sales/{str:shopcode}/{str:month}",
+    response=List[SalesPageMonthsSummarySchema],
+    tags=["sale_datas"],
+)
+def get_month_sales_data(request, shopcode: str, month: str):
+    """
+    获取指定店铺的指定月份的商品页面的销售数据
+    :param request:
+    :param shopcode: 店铺code
+    :param month: 月份
+    """
+    query = Q(shop_code=shopcode)
+    if month:
+        query &= Q(effect_month=month)
+    else:
+        month = get_date_first_month_day(current_date=datetime.now())
+        query &= Q(effect_month=month)
+
+    qs = SalesPageMonthsSummary.objects.filter(query).order_by("-amount_price")
+
+    print(qs.query)
+
+    return qs

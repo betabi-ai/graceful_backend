@@ -12,3 +12,7 @@ def get_previous_months_first_day(current_date: datetime, months: int):
         )
         first_days.append(first_day.strftime("%Y-%m-%d"))
     return first_days
+
+
+def get_date_first_month_day(current_date: datetime):
+    return (current_date.replace(day=1)).strftime("%Y-%m-%d")
