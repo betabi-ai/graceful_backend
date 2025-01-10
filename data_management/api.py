@@ -1177,6 +1177,7 @@ def export_orders_data(request):
     "/graceful_shops",
     response=List[GracefulShopsSchema],
     tags=["datas_management"],
+    auth=None,
 )
 def get_graceful_shops(request, platform: int = None):
     if platform:
