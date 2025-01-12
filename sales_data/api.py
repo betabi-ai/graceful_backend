@@ -1,5 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, List
+from django.http import HttpResponse
 from ninja import Router, File
 from ninja_jwt.authentication import JWTAuth
 from django.db import connection
@@ -8,10 +10,10 @@ from django.db import connection
 from django.db.models import Q, Sum, F
 from ninja.pagination import paginate, PageNumberPagination
 from django.conf import settings
+from openpyxl import Workbook
 
-from sales_data.schemas import SalesPageMonthsSummarySchema
-from shares.models import OrderDetailsCalc, SalesPageMonthsSummary
-from shares.time_utils import get_date_first_month_day, get_previous_months_first_day
+from shares.models import GracefulShops, OrderDetailsCalc
+from shares.time_utils import get_previous_months_first_day
 
 router = Router(auth=JWTAuth())
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
@@ -253,6 +255,60 @@ def get_month_sales_data(request, shopcode: str = "01", month: str = ""):
     :param month: 月份
     """
 
+    resutls, _ = _get_month_sales_data(shopcode, month)
+    return resutls
+
+
+@router.get(
+    "/month_sales_data/export",
+    tags=["sale_datas"],
+)
+def export_month_sales_data(request, shopcode: str = "01", month: str = ""):
+
+    shop = GracefulShops.objects.filter(shop_code=shopcode).first()
+    if not shop:
+        return HttpResponse("店铺不存在", status=404)
+
+    results, column_names = _get_month_sales_data(shopcode, month)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = f"{shop.shopname}({month[:7]})"
+
+    # 映射表头
+    headers = [FIELD_TO_HEADER[col] for col in column_names if col in FIELD_TO_HEADER]
+
+    ws.append(headers)
+
+    # 写入查询结果
+    for row in results:
+        filtered_row = [
+            format_value(row[field])
+            for field in column_names
+            if field in FIELD_TO_HEADER
+        ]
+        ws.append(filtered_row)
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="customs_{month}.xlsx"'
+
+    wb.save(response)
+
+    return response
+
+
+def format_value(value):
+    """格式化值为字符串以兼容 Excel"""
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, date):
+        return value.strftime("%Y-%m-%d")
+    return value
+
+
+def _get_month_sales_data(shopcode: str, month: str):
     sql_query = """
             -- Step 1: 基础数据过滤
             WITH base_data AS (
@@ -420,14 +476,47 @@ def get_month_sales_data(request, shopcode: str = "01", month: str = ""):
 
     # 执行查询
     with connection.cursor() as cursor:
-        print("$" * 50)
-        # print(cursor.mogrify(sql_query, [shopcode, month]))
 
         cursor.execute(sql_query, [shopcode, month])
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
-        # print(columns)
         results = [dict(zip(columns, row)) for row in rows]
-    return results
 
-    return []
+        return results, columns
+
+    return [], None
+
+
+# 字段与表头映射关系
+FIELD_TO_HEADER = {
+    "manage_code": "页面管理番号",
+    "item_code": "商品番号",
+    "ad_amount": "売上値引後(税込)",
+    "adut_amount": "売上値引後(税抜)",
+    "coupon": "クーポン",
+    "jan_count": "販売SKU数",
+    "order_count": "販売订单数",
+    "rpp_count": "RPP件数",
+    "rpp_percentage": "RPP割合",
+    "afl_order_count": "AF件数",
+    "afl_percentage": "AF割合",
+    "ca_sales_count": "CA件数",
+    "ca_percentage": "CA割合",
+    "other_count": "その他件数",
+    "other_percentage": "その他割合",
+    "total_orginal_price": "原価",
+    "shipping_fee": "送料(税込)",
+    "commission": "手数料(マージン+決済)",
+    "pointsawarded": "ポイント",
+    "rpp_amount": "RPP商品別(税込)",
+    "ca_amount": "CA商品別(税込)",
+    "afl_rewards": "アフィリエイト報酬(税込)",
+    "advertisingfees": "CPA(割合)",
+    "deal_sales_value": "DEAL",
+    "rmail_chargefee": "おス(店舗)",
+    "rrp_discount": "RPP値引き",
+    "benefit": "商品利益",
+    "benefit_percentage": "商品利益率",
+    "total_benefit_percentage": "商品利益割合率",
+    "avg_benefit": "平均利益",
+}
