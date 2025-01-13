@@ -846,3 +846,28 @@ class SalesPageMonthsSummary(models.Model):
     class Meta:
         managed = False
         db_table = "sales_page_months_summary"
+
+
+# 店铺每日销售目标
+class ShopDailySalesTagets(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    shopid = models.CharField(max_length=20)
+    shop_code = models.CharField(max_length=20, blank=True, null=True)
+    shop_name = models.CharField(max_length=50, blank=True, null=True)
+    effect_date = models.DateField(blank=True, null=True)
+    taget_amount = models.DecimalField(
+        max_digits=18, decimal_places=2, blank=True, null=True
+    )
+    is_done = models.BooleanField(blank=True, null=True)
+    updated_at = models.DateTimeField()
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="sales_daily_tagets_updated_by",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = "shop_daily_sales_tagets"

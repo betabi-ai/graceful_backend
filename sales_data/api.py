@@ -1,18 +1,20 @@
+import csv
 from datetime import date, datetime
 from decimal import Decimal
+from io import StringIO
 from typing import Any, List
 from django.http import HttpResponse
-from ninja import Router, File
+from ninja import Router, File, UploadedFile
 from ninja_jwt.authentication import JWTAuth
 from django.db import connection
-
+from dateutil.relativedelta import relativedelta
 
 from django.db.models import Q, Sum, F
 from ninja.pagination import paginate, PageNumberPagination
 from django.conf import settings
 from openpyxl import Workbook
 
-from shares.models import GracefulShops, OrderDetailsCalc
+from shares.models import GracefulShops, OrderDetailsCalc, ShopDailySalesTagets
 from shares.time_utils import get_previous_months_first_day
 
 router = Router(auth=JWTAuth())
@@ -520,3 +522,130 @@ FIELD_TO_HEADER = {
     "total_benefit_percentage": "商品利益割合率",
     "avg_benefit": "平均利益",
 }
+
+
+# ================================== shop_daily_sales_tagets ============================================
+
+
+# 获取指定店铺的指定月份的销售目标
+@router.get(
+    "/dailysalestagets",
+    response=List[Any],
+    tags=["sale_datas"],
+)
+def get_shop_daily_sales_tagets(request, shopcode: str, month: str):
+
+    start_date = datetime.strptime(month, "%Y-%m-01").date()
+    end_date = start_date + relativedelta(months=1) - relativedelta(days=1)
+
+    query = (
+        Q(shop_code=shopcode)
+        & Q(effect_date__gte=start_date)
+        & Q(effect_date__lte=end_date)
+    )
+
+    qs = (
+        ShopDailySalesTagets.objects.filter(query)
+        .values("taget_amount", "effect_date", "shop_code", "is_done")
+        .order_by("effect_date")
+    )
+
+    return qs
+
+
+@router.post(
+    "/dailysalestagets/upload/{str:shopcode}/{str:month}",
+    response={200: Any, 422: Any},
+    tags=["datas_management"],
+)
+def upload_daily_sales_tagets(
+    request,
+    shopcode: str,
+    month: str,
+    file: UploadedFile = File(...),
+):
+    """
+    上传 报关信息 文件
+    """
+    try:
+
+        shop = GracefulShops.objects.filter(shop_code=shopcode).first()
+        if not shop:
+            return 422, {"message": "店铺不存在"}
+
+        # 读取并解码文件内容
+        file_content = file.read().decode("utf-8")
+        csv_reader = csv.DictReader(StringIO(file_content))
+
+        _FIELDNAME_MAPPING = {"日にち": "effect_date", "目標(税別)": "taget_amount"}
+
+        # 替换字段名
+        csv_reader.fieldnames = [
+            _FIELDNAME_MAPPING.get(field, field) for field in csv_reader.fieldnames
+        ]
+
+        # 检查文件是否包含必要字段
+        required_fields = {"effect_date", "taget_amount"}
+        if not required_fields.issubset(csv_reader.fieldnames):
+            missing_fields = required_fields - set(csv_reader.fieldnames or [])
+            return 422, {"message": f"缺少必要字段: {', '.join(missing_fields)}"}
+
+        # 解析并处理数据
+        user = request.user
+        targets = []
+        is_check = False
+        for row in csv_reader:
+            # 去除空行
+            if not any(row.values()):
+                continue
+
+            effect_date = row["effect_date"].replace("/", "-")
+            taget_amount = row["taget_amount"].replace(",", "")
+
+            if not is_check:
+                target = ShopDailySalesTagets.objects.filter(
+                    effect_date=effect_date,
+                    shop_code=shopcode,
+                ).first()
+
+                if target:
+                    return 422, {"message": "已存在相同日期的销售目标"}
+
+                is_check = True
+
+            if user:
+                targets.append(
+                    ShopDailySalesTagets(
+                        shopid=shop.shopid,
+                        shop_name=shop.shopname,
+                        shop_code=shopcode,
+                        effect_date=effect_date,
+                        taget_amount=taget_amount,
+                        is_done=False,
+                        updated_by=user,
+                    )
+                )
+            else:
+                targets.append(
+                    ShopDailySalesTagets(
+                        shopid=shop.shopid,
+                        shop_name=shop.shopname,
+                        shop_code=shopcode,
+                        effect_date=effect_date,
+                        taget_amount=taget_amount,
+                        is_done=False,
+                    )
+                )
+
+        # ShopDailySalesTagets.objects.bulk_create(targets)
+        ShopDailySalesTagets.objects.bulk_update(targets)
+
+        return 200, {"message": f"上传成功！！！"}
+
+    except UnicodeDecodeError:
+        return 422, {"message": "文件解码失败，请确保文件是 UTF-8 编码"}
+    except Exception as e:
+        return 422, {"message": f"处理文件时发生错误: {str(e)}"}
+
+
+# ================================== shop_daily_sales_tagets ============================================
