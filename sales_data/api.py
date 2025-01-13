@@ -511,7 +511,7 @@ FIELD_TO_HEADER = {
     "rpp_amount": "RPP商品別(税込)",
     "ca_amount": "CA商品別(税込)",
     "afl_rewards": "アフィリエイト報酬(税込)",
-    "advertisingfees": "CPA(割合)",
+    "advertisingfees": "CPA",
     "deal_sales_value": "DEAL",
     "rmail_chargefee": "おス(店舗)",
     "rrp_discount": "RPP値引き",
