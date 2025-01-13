@@ -15,6 +15,7 @@ from django.conf import settings
 from openpyxl import Workbook
 
 from shares.models import GracefulShops, OrderDetailsCalc, ShopDailySalesTagets
+from shares.schemas import ShopDailySalesTagetsSchema
 from shares.time_utils import get_previous_months_first_day
 
 router = Router(auth=JWTAuth())
@@ -546,7 +547,7 @@ def get_shop_daily_sales_tagets(request, shopcode: str, month: str):
 
     qs = (
         ShopDailySalesTagets.objects.filter(query)
-        .values("taget_amount", "effect_date", "shop_code", "is_done")
+        .values("id", "taget_amount", "effect_date", "shop_code", "is_done")
         .order_by("effect_date")
     )
 
@@ -646,6 +647,26 @@ def upload_daily_sales_tagets(
         return 422, {"message": "文件解码失败，请确保文件是 UTF-8 编码"}
     except Exception as e:
         return 422, {"message": f"处理文件时发生错误: {str(e)}"}
+
+
+@router.post(
+    "/dailysalestagets/upsert",
+    response={200: ShopDailySalesTagetsSchema, 422: Any},
+    tags=["sale_datas"],
+)
+def upsert_shop_daily_sales_tagets(request, data: ShopDailySalesTagetsSchema):
+
+    target = data.dict()
+
+    user = request.user
+    if user:
+        target["updated_by"] = user
+
+    new_target, _ = ShopDailySalesTagets.objects.update_or_create(
+        id=data.id, defaults=target
+    )
+
+    return new_target
 
 
 # ================================== shop_daily_sales_tagets ============================================
