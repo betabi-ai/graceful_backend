@@ -14,7 +14,12 @@ from ninja.pagination import paginate, PageNumberPagination
 from django.conf import settings
 from openpyxl import Workbook
 
-from shares.models import GracefulShops, OrderDetailsCalc, ShopDailySalesTagets
+from shares.models import (
+    GracefulShops,
+    OrderDetailsCalc,
+    ShopDailySalesTagets,
+    ShopFixedFees,
+)
 from shares.schemas import ShopDailySalesTagetsSchema
 from shares.time_utils import get_previous_months_first_day
 
@@ -669,4 +674,25 @@ def upsert_shop_daily_sales_tagets(request, data: ShopDailySalesTagetsSchema):
     return new_target
 
 
-# ================================== shop_daily_sales_tagets ============================================
+# ================================== shop_fixed_fees ============================================
+
+
+# 获取指定店铺的指定月份的固定费
+@router.get(
+    "/fixedfees",
+    response=List[Any],
+    tags=["sale_datas"],
+)
+def get_shop_fixed_fees(request, shopcode: str, month: str):
+
+    query = Q(shop_code=shopcode) & Q(effect_month=month)
+
+    qs = (
+        ShopFixedFees.objects.filter(query)
+        .values(
+            "id", "shop_code", "shop_name", "effect_month", "fee_name", "fee_amount"
+        )
+        .order_by("effect_month")
+    )
+
+    return qs

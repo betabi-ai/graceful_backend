@@ -871,3 +871,28 @@ class ShopDailySalesTagets(models.Model):
     class Meta:
         managed = False
         db_table = "shop_daily_sales_tagets"
+
+
+# 店铺每月固定费
+class ShopFixedFees(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    shopid = models.CharField(max_length=20)
+    shop_code = models.CharField(max_length=20, blank=True, null=True)
+    shop_name = models.CharField(max_length=50, blank=True, null=True)
+    effect_month = models.DateField(blank=True, null=True)
+    fee_name = models.CharField(max_length=50, blank=True, null=True)
+    fee_amount = models.DecimalField(
+        max_digits=18, decimal_places=2, blank=True, null=True
+    )
+    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_USER_ID,
+        related_name="shop_fixed_fees_updated_by",
+    )
+
+    class Meta:
+        managed = False
+        db_table = "shop_fixed_fees"

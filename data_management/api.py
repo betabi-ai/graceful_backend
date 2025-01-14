@@ -1234,13 +1234,17 @@ def get_product_categories(request, wpricetemplate: bool = True):
 
     if wpricetemplate:
 
-        categories = ProductCategories.objects.all().values(
-            "id",
-            "category_name",
-            "parent_id",
-            "parent__category_name",  # 原始字段名称
-            "category_level",
-            "price_template",
+        categories = (
+            ProductCategories.objects.all()
+            .values(
+                "id",
+                "category_name",
+                "parent_id",
+                "parent__category_name",  # 原始字段名称
+                "category_level",
+                "price_template",
+            )
+            .order_by("id")
         )
 
         # 重命名字段
