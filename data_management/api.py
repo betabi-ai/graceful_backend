@@ -72,10 +72,11 @@ _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
 def get_products(
     request,
     q: str = "",
-    sort: str = "status,created_at",
+    sort: str = "itemid,status",
     status: int = -1,
     supplier: str = "all",
 ):
+    print("status:", sort)
     query = Q()
     if q:
         query &= (
@@ -90,7 +91,7 @@ def get_products(
     if sort:
         sorts = sort.split(",")
     else:
-        sorts = ["status", "-created_at"]
+        sorts = ["itemid", "status"]
     qs = Products.objects.filter(query).order_by(*sorts)
 
     return qs
