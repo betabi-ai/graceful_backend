@@ -4,6 +4,7 @@ PRODUCT_UPLOAD_FIELDNAME_MAPPING = {
     "JANコード": "jan_code",
     "中文商品名": "product_name",
     "商品价格(JPY)": "product_price",
+    "商品类目": "category_name",
     "属性1名": "attribute",
     "属性2名": "compatible_models",
     "GTIN（JANコード）": "gtin_code",

@@ -155,10 +155,12 @@ def upload_products(request, file: UploadedFile = File(...)):
         # print("=== fieldnames:", csv_reader.fieldnames)
 
         # 检查文件是否包含必要字段
-        required_fields = {"itemid", "jan_code"}
+        required_fields = {"itemid", "jan_code", "category_name"}
         if not required_fields.issubset(csv_reader.fieldnames):
             missing_fields = required_fields - set(csv_reader.fieldnames or [])
             return 422, {"message": f"缺少必要字段: {', '.join(missing_fields)}"}
+
+        # print("...........")
 
         # 解析并处理数据
         user = request.user
@@ -175,14 +177,36 @@ def upload_products(request, file: UploadedFile = File(...)):
             if not any(row.values()):
                 continue
 
+            product_price = row["product_price"]
+            if product_price:
+                product_price = float(product_price)
+            else:
+                continue
+
             jan_code = row["jan_code"]
-            gtin_code = row["gtin_code"]
+            if "X" in jan_code.upper():
+                continue
 
             # 如果Jan code 已经存在，则不导入此条数据
             product = Products.objects.filter(jan_code=jan_code).first()
             if product:
                 not_insert_jancodes.add(jan_code)
                 continue
+
+            category_name = row["category_name"]
+            if not category_name:
+                continue
+
+            category_name = category_name.strip()
+
+            category = ProductCategories.objects.filter(
+                category_name=category_name
+            ).first()
+
+            if not category:
+                continue
+
+            gtin_code = row["gtin_code"]
 
             if gtin_code:
                 gtin_info = GsoneJancode.objects.filter(gs_jancode=gtin_code).first()
@@ -227,6 +251,8 @@ def upload_products(request, file: UploadedFile = File(...)):
             else:
                 row["supplier_id"] = None
 
+            del row["category_name"]
+
             new_product = fill_defaults(row, PRODUCT_DEFAULT_VALUES)
 
             # print(new_product)
@@ -236,6 +262,7 @@ def upload_products(request, file: UploadedFile = File(...)):
             if user:
                 p = Products.objects.create(
                     **new_product,
+                    category=category,
                     updated_by=user,
                 )
 
@@ -245,7 +272,10 @@ def upload_products(request, file: UploadedFile = File(...)):
                     gs.save()
 
             else:
-                p = Products.objects.create(**new_product)
+                p = Products.objects.create(
+                    **new_product,
+                    category=category,
+                )
 
                 if gs:
                     gs.product_jancode = jan_code
