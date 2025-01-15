@@ -29,3 +29,16 @@ class SalesPageMonthsSummarySchema(Schema):
     deal_sales_value: Optional[int] = None
     rmail_chargefee: Optional[int] = None
     pointsawarded: Optional[int] = None
+
+
+# 店铺每月固定费
+class ShopFixedFeesSchema(Schema):
+    """店铺每月固定费"""
+
+    id: Optional[int] = None
+    shopid: str
+    shop_code: str
+    shop_name: str
+    effect_month: date
+    fee_name: str
+    fee_amount: int

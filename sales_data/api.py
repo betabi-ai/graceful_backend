@@ -14,6 +14,7 @@ from ninja.pagination import paginate, PageNumberPagination
 from django.conf import settings
 from openpyxl import Workbook
 
+from sales_data.schemas import ShopFixedFeesSchema
 from shares.models import (
     GracefulShops,
     OrderDetailsCalc,
@@ -696,3 +697,33 @@ def get_shop_fixed_fees(request, shopcode: str, month: str):
     )
 
     return qs
+
+
+# 新增或更新 固定费
+@router.post(
+    "/fixedfees/upsert",
+    response={200: ShopFixedFeesSchema, 422: Any},
+    tags=["sale_datas"],
+)
+def upsert_shop_fixed_fees(request, data: ShopFixedFeesSchema):
+    info = data.dict()
+
+    user = request.user
+    if user:
+        info["updated_by"] = user
+
+    new_info, _ = ShopFixedFees.objects.update_or_create(id=data.id, defaults=info)
+
+    return new_info
+
+
+# 删除 固定费
+@router.delete(
+    "/fixedfees",
+    response=Any,
+    tags=["sale_datas"],
+)
+def delete_shop_fixed_fees(request, id: int):
+    ShopFixedFees.objects.filter(id=id).delete()
+
+    return {"message": "删除成功"}
