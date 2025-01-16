@@ -133,6 +133,7 @@ def upsert_product(request, data: ProductsUpsertSchema):
     return new_product
 
 
+# 上传商品数据文件 csv 格式
 @router.post(
     "/products/upload",
     response={200: Any, 422: Any},
