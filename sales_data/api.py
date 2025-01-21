@@ -319,169 +319,168 @@ def format_value(value):
 
 def _get_month_sales_data(shopcode: str, month: str):
     sql_query = """
-            -- Step 1: 基础数据过滤
-            WITH base_data AS (
-                SELECT 
-                    shopid,
-                    shop_code,
-                    effect_month,
-                    item_code,
-                    manage_code,
-                    amount_price,
-                    abs(coupon) AS abs_coupon, -- 绝对值的优惠券金额
-                    tax_price,
-                    order_count,
-                    jan_count,
-                    total720hcv,
-                    total720hgms,
-                    afl_order_count,
-                    afl_rewards,
-                    ca_sales_count,
-                    ca_actual_amount,
-                    total_orginal_price,
-                    shipping_fee,
-                    pointsawarded,
-                    advertisingfees,
-                    deal_sales_value,
-                    rmail_chargefee
-                FROM public.sales_page_months_summary
-                WHERE shop_code = %s AND effect_month = %s
-            ),
-            -- Step 2: 计算派生数据
-            calculated_data AS (
-                SELECT 
-                    shopid,
-                    shop_code,
-                    effect_month,
-                    item_code,
-                    manage_code,
-                    ROUND((amount_price - abs_coupon), 0) AS ad_amount, -- 扣除优惠券后的销售额（含税）
-                    ROUND((amount_price - abs_coupon - tax_price), 0) AS adut_amount, -- 扣除优惠券和税后的销售额
-                    abs_coupon AS coupon, -- 优惠券金额
-                    order_count, -- 订单数
-                    jan_count, -- 销售件数
-                    total720hcv AS rpp_count, -- RPP 件数
-                    ROUND(total720hgms * 1.1, 0) AS rpp_amount, -- RPP 商品金额（含税）
-                    ROUND((total720hcv * 100.0 / order_count), 2) AS rpp_percentage, -- RPP 占比
-                    afl_order_count, -- Affiliate 订单数
-                    ROUND((afl_order_count * 100.0 / order_count), 2) AS afl_percentage, -- Affiliate 占比
-                    ca_sales_count, -- CA 订单数
-                    ROUND((ca_sales_count * 100.0 / order_count), 2) AS ca_percentage, -- CA 占比
-                    ROUND(ca_actual_amount * 1.1, 0) AS ca_amount, -- CA 商品金额（含税）
-                    ROUND(afl_rewards * 1.1, 0) AS afl_rewards, -- Affiliate 报酬（含税）
-                    ROUND(afl_rewards * 0.3 * 1.1, 0) AS afl_commission, -- Affiliate 手续费（含税）
-                    (order_count - total720hcv - afl_order_count - ca_sales_count) AS other_count, -- 其他订单数
-                    ROUND(((order_count - total720hcv - afl_order_count - ca_sales_count) * 100.0 / order_count), 2) AS other_percentage, -- 其他订单占比
-                    total_orginal_price, -- 原价之和
-                    ROUND(shipping_fee, 0) AS shipping_fee, -- 物流费用之和
-                    ROUND((amount_price - abs_coupon) * 0.07 * 1.1, 0) AS commission, -- 平台佣金
-                    pointsawarded, -- 平台奖励积分
-                    advertisingfees, -- 广告支出
-                    deal_sales_value, -- DEAL 广告支出
-                    rmail_chargefee, -- 邮件广告支出
-                    -- 利润计算（扣除所有支出后）
-                    amount_price - abs_coupon - tax_price - total_orginal_price - shipping_fee 
-                    - ((amount_price - abs_coupon) * 0.07 * 1.1) 
-                    - (total720hgms * 1.1) - (ca_actual_amount * 1.1) 
-                    - afl_rewards * 1.1 - afl_rewards * 0.3 * 1.1 AS benefit
-                FROM base_data
-            ),
+                -- Step 1: 基础数据过滤
+                WITH base_data AS (
+                    SELECT 
+                        shopid,
+                        shop_code,
+                        effect_month,
+                        item_code,
+                        manage_code,
+                        amount_price,
+                        ABS(coupon) AS abs_coupon, -- 优惠券金额取绝对值
+                        tax_price,
+                        order_count,
+                        jan_count,
+                        total720hcv,
+                        total720hgms,
+                        afl_order_count,
+                        afl_rewards,
+                        ca_sales_count,
+                        ca_actual_amount,
+                        total_orginal_price,
+                        shipping_fee,
+                        pointsawarded,
+                        advertisingfees,
+                        deal_sales_value,
+                        rmail_chargefee
+                    FROM sales_page_months_summary
+                    WHERE shop_code = %s AND effect_month = %s
+                ),
+                -- Step 2: 计算派生数据
+                calculated_data AS (
+                    SELECT 
+                        shopid,
+                        shop_code,
+                        effect_month,
+                        item_code,
+                        manage_code,
+                        ROUND((amount_price - abs_coupon), 0) AS ad_amount, -- 扣除优惠券后的销售额（含税）
+                        ROUND((amount_price - abs_coupon - tax_price), 0) AS adut_amount, -- 扣除优惠券和税后的销售额
+                        abs_coupon AS coupon, -- 优惠券金额
+                        order_count, -- 订单数
+                        jan_count, -- 销售件数
+                        total720hcv AS rpp_count, -- RPP 件数
+                        ROUND(total720hgms * 1.1, 0) AS rpp_amount, -- RPP 商品金额（含税）
+                        ROUND(CASE WHEN order_count = 0 THEN 0 ELSE (total720hcv * 100.0 / order_count) END, 2) AS rpp_percentage, -- RPP 占比 
+                        afl_order_count, -- Affiliate 订单数
+                        ROUND(CASE WHEN order_count = 0 THEN 0 ELSE (afl_order_count * 100.0 / order_count) END, 2) AS afl_percentage, -- Affiliate 占比
+                        ca_sales_count, -- CA 订单数
+                        ROUND(CASE WHEN order_count = 0 THEN 0 ELSE (ca_sales_count * 100.0 / order_count) END, 2) AS ca_percentage, -- CA 占比 
+                        ROUND(ca_actual_amount * 1.1, 0) AS ca_amount, -- CA 商品金额（含税）
+                        ROUND(afl_rewards * 1.1, 0) AS afl_rewards, -- Affiliate 报酬（含税）
+                        ROUND(afl_rewards * 0.3 * 1.1, 0) AS afl_commission, -- Affiliate 手续费（含税）
+                        (order_count - total720hcv - afl_order_count - ca_sales_count) AS other_count, -- 其他订单数
+                        ROUND(CASE WHEN order_count = 0 THEN 0 ELSE ((order_count - total720hcv - afl_order_count - ca_sales_count) * 100.0 / order_count) END, 2) AS other_percentage, -- 其他订单占比
+                        total_orginal_price, -- 原价之和
+                        ROUND(shipping_fee, 0) AS shipping_fee, -- 物流费用之和
+                        ROUND((amount_price - abs_coupon) * 0.07 * 1.1, 0) AS commission, -- 平台佣金
+                        pointsawarded, -- 平台奖励积分
+                        advertisingfees, -- 广告支出
+                        deal_sales_value, -- DEAL 广告支出
+                        rmail_chargefee, -- 邮件广告支出
+                        amount_price - abs_coupon - tax_price - total_orginal_price - shipping_fee 
+                        - ((amount_price - abs_coupon) * 0.07 * 1.1) 
+                        - (total720hgms * 1.1) - (ca_actual_amount * 1.1) 
+                        - afl_rewards * 1.1 - afl_rewards * 0.3 * 1.1 AS benefit -- 利润计算
+                    FROM base_data
+                ),
+                -- Step 3: 汇总数据
+                summary_data AS (
+                    SELECT 
+                        bd.shop_code,
+                        bd.effect_month,
+                        SUM(amount_price - abs_coupon - tax_price) AS total_amount, -- 总销售额（扣除优惠券和税）
+                        pointsawarded, -- 平台奖励积分总和
+                        discount_rate -- 折扣率
+                    FROM base_data bd
+                    LEFT JOIN rpp_discount_infos rdi 
+                        ON rdi.shopid = bd.shopid AND rdi.effect_month = bd.effect_month
+                    GROUP BY bd.shop_code, bd.effect_month, pointsawarded, discount_rate
+                ),
+                -- Step 4: 总利润计算
+                total_datas AS (
+                    SELECT  
+                        A.shop_code,
+                        A.effect_month,  
+                        SUM(A.benefit - (
+                            (A.adut_amount * 1.1 / B.total_amount) 
+                            * (B.pointsawarded + A.advertisingfees + A.deal_sales_value + A.rmail_chargefee)
+                        )) AS total_benefit
+                    FROM calculated_data AS A
+                    LEFT JOIN summary_data AS B
+                        ON A.shop_code = B.shop_code AND A.effect_month = B.effect_month 
+                    GROUP BY A.shop_code, A.effect_month
+                ),
 
-            -- Step 3: 汇总数据
-            summary_data AS (
+                -- 提前计算净收益以减少重复计算
+                benefit_data AS (
+                    SELECT 
+                        A.*,
+                        ROUND(
+                            CASE 
+                                WHEN B.total_amount = 0 THEN 0
+                                ELSE A.benefit - ((A.adut_amount * 1.1 / B.total_amount) * 
+                                (B.pointsawarded + A.advertisingfees + A.deal_sales_value + A.rmail_chargefee))
+                            END, 
+                        0) AS net_benefit
+                    FROM calculated_data AS A
+                    LEFT JOIN summary_data AS B
+                        ON A.shop_code = B.shop_code AND A.effect_month = B.effect_month
+                )
+                -- Step 5: 最终查询
                 SELECT 
-                    shop_code,
+                    bd.shopid,
+                    bd.shop_code,
                     bd.effect_month,
-                    SUM(amount_price - abs_coupon - tax_price) AS total_amount, -- 总销售额（扣除优惠券和税）
-                    pointsawarded, -- 平台奖励积分总和
-                    discount_rate -- 折扣率
-                FROM base_data bd
-                LEFT JOIN rpp_discount_infos rdi 
-                    ON rdi.shopid = bd.shopid AND rdi.effect_month = bd.effect_month
-                GROUP BY shop_code, bd.effect_month, pointsawarded, discount_rate
-            ),
+                    bd.item_code,
+                    bd.manage_code,
+                    bd.ad_amount,
+                    bd.adut_amount,
+                    bd.coupon,
+                    bd.order_count,
+                    bd.jan_count,
+                    bd.rpp_count,
+                    bd.rpp_amount,
+                    bd.rpp_percentage,
+                    bd.afl_order_count,
+                    bd.afl_percentage,
+                    bd.ca_sales_count,
+                    bd.ca_percentage,
+                    bd.ca_amount,
+                    bd.afl_rewards,
+                    bd.afl_commission,
+                    bd.other_count,
+                    bd.other_percentage,
+                    bd.total_orginal_price,
+                    bd.shipping_fee,
+                    bd.commission,
+                    ROUND(C.total_benefit, 0) AS total_benefit,
+                    bd.net_benefit, -- 当前商品净收益
+                    ROUND(
+                        CASE 
+                            WHEN bd.adut_amount = 0 THEN 0
+                            ELSE (bd.net_benefit * 100.0 / bd.adut_amount)
+                        END, 
+                    2) AS benefit_percentage, -- 利益率
+                    ROUND(
+                        CASE 
+                            WHEN C.total_benefit = 0 THEN 0
+                            ELSE (bd.net_benefit * 100.0 / C.total_benefit)
+                        END, 
+                    2) AS total_benefit_percentage, -- 总利益占比
+                    ROUND(
+                        CASE 
+                            WHEN bd.jan_count = 0 THEN 0
+                            ELSE (bd.net_benefit / bd.jan_count)
+                        END, 
+                    0) AS avg_benefit -- 每件商品平均收益
+                FROM benefit_data AS bd
+                LEFT JOIN total_datas AS C
+                    ON bd.shop_code = C.shop_code AND bd.effect_month = C.effect_month
+                ORDER BY total_benefit_percentage DESC;
 
-            -- Step 4: 总利润计算
-            total_datas AS (
-                SELECT  
-                    A.shop_code,
-                    A.effect_month,  
-                    SUM(A.benefit - (
-                        (A.adut_amount * 1.1 / B.total_amount) 
-                        * (B.pointsawarded + A.advertisingfees + A.deal_sales_value + A.rmail_chargefee)
-                    )) AS total_benefit
-                FROM calculated_data AS A
-                LEFT JOIN summary_data AS B
-                    ON A.shop_code = B.shop_code AND A.effect_month = B.effect_month 
-                GROUP BY A.shop_code, A.effect_month
-            )
-
-            -- Step 5: 最终查询
-            SELECT 
-                A.shopid, -- 店铺ID
-                A.shop_code, -- 店铺代码
-                A.effect_month, -- 生效月份
-                A.item_code, -- 商品编号
-                A.manage_code, -- 商品管理编号 (通常是商品URL或标识符)
-                A.ad_amount, -- 税前销售额 (扣除优惠券后的含税金额)
-                A.adut_amount, -- 税后销售额 (扣除优惠券后的不含税金额)
-                A.coupon, -- 优惠券金额
-                A.order_count, -- 销售订单总数
-                A.jan_count, -- 销售商品总数 (以数量计算)
-                A.rpp_count, -- RPP (按单品推广) 的订单数
-                A.rpp_amount, -- RPP 总金额 (按单品推广的总金额，含税)
-                A.rpp_percentage, -- RPP 占比 (RPP 订单数占总订单数的比例)
-                A.afl_order_count, -- AF (Affiliate 联盟推广) 的订单数
-                A.afl_percentage, -- AF 占比 (AF 订单数占总订单数的比例)
-                A.ca_sales_count, -- CA (活动推广) 的订单数
-                A.ca_percentage, -- CA 占比 (CA 订单数占总订单数的比例)
-                A.ca_amount, -- CA 商品金额 (活动推广销售额，含税)
-                A.afl_rewards, -- AF 联盟推广奖励 (含税)
-                A.afl_commission, -- AF 联盟推广佣金 (含税)
-                A.other_count, -- 其他来源的订单数 (非 RPP、AF 或 CA)
-                A.other_percentage, -- 其他来源订单占比
-                A.total_orginal_price, -- 商品原价 (总的原始价格)
-                A.shipping_fee, -- 运输费用 (含税)
-                A.commission, -- 平台手续费 (按销售额的 0.07 计算，并含税)
-                -- A.pointsawarded, -- 发放的积分金额 (整个月份的总支出)（为整月的支出数据）
-                -- A.advertisingfees, -- 广告费用 (CPA 数据，整月支出)（为整月的支出数据）
-                -- A.deal_sales_value, -- DEAL 广告支出 (整月支出)（为整月的支出数据）
-                -- A.rmail_chargefee, -- 邮件广告费用 (Rakuten 平台邮件推广的支出)（为整月的支出数据）
-
-                -- 以下为按比例分摊到当前销售项的数据
-                round((A.adut_amount * 1.1 / B.total_amount) * B.pointsawarded, 0) AS pointsawarded, -- 按比例分摊的积分支出
-                round((A.adut_amount * 1.1 / B.total_amount) * A.advertisingfees, 0) AS advertisingfees, -- 按比例分摊的广告费用
-                round((A.adut_amount * 1.1 / B.total_amount) * A.deal_sales_value, 0) AS deal_sales_value, -- 按比例分摊的 DEAL 广告费用
-                round((A.adut_amount * 1.1 / B.total_amount) * A.rmail_chargefee, 0) AS rmail_chargefee, -- 按比例分摊的邮件广告费用
-                round((A.rpp_amount * B.discount_rate) / 100.0, 0) AS rrp_discount, -- RPP 折扣金额 (根据折扣率计算)
-
-                -- 以下为利益相关的字段计算
-                round(C.total_benefit, 0) AS total_benefit, -- 总收益
-                round(
-                    benefit - ((A.adut_amount * 1.1 / B.total_amount) * (B.pointsawarded + A.advertisingfees + A.deal_sales_value + A.rmail_chargefee)), 
-                    0
-                ) AS benefit, -- 当前商品的最终收益 (扣除各种成本后的净收益)
-                round(
-                    (A.benefit - ((A.adut_amount * 1.1 / B.total_amount) * (B.pointsawarded + A.advertisingfees + A.deal_sales_value + A.rmail_chargefee))) * 100.0 / A.adut_amount, 
-                    2
-                ) AS benefit_percentage, -- 利益率 (净收益占销售额比例)
-                round(
-                    (benefit - ((A.adut_amount * 1.1 / B.total_amount) * (B.pointsawarded + A.advertisingfees + A.deal_sales_value + A.rmail_chargefee))) * 100.0 / C.total_benefit, 
-                    2
-                ) AS total_benefit_percentage, -- 总利益中的占比 (当前商品收益占总收益的比例)
-                round(
-                    (benefit - ((A.adut_amount * 1.1 / B.total_amount) * (B.pointsawarded + A.advertisingfees + A.deal_sales_value + A.rmail_chargefee))) / A.jan_count, 
-                    0
-                ) AS avg_benefit -- 每件商品的平均收益 (净收益除以销售件数)
-
-            FROM calculated_data AS A
-            LEFT JOIN summary_data AS B
-                ON A.shop_code = B.shop_code AND A.effect_month = B.effect_month 
-            LEFT JOIN total_datas AS C
-                ON A.shop_code = C.shop_code AND A.effect_month = C.effect_month
-            ORDER BY total_benefit_percentage DESC;
-
-        """
+                """
 
     # 执行查询
     with connection.cursor() as cursor:
