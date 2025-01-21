@@ -678,6 +678,7 @@ def upsert_shop_daily_sales_tagets(request, data: ShopDailySalesTagetsSchema):
 # ================================== shop_daily_sales_summary ============================================
 
 
+# 获取指定店铺的指定日期范围内的销售数据
 @router.get(
     "/shop/dailysales/summary",
     response=List[Any],
@@ -689,6 +690,7 @@ def get_shop_daily_sales_summary(request, shopcode: str, start: str, end: str):
                 sds.shop_code
                 ,sds.delivery_date 		-- 日にち 
                 ,EXTRACT(ISODOW FROM sds.delivery_date) AS weekday_number -- 星期数 1（Monday）到 7（Sunday）
+                ,sds.order_count -- 订单数
                 ,sdst.taget_amount		-- 目標(税別) 不含税
                 ,sds.subtotal_price - sds.coupon - sds.tax_price as amount_untax	--	売上(税別) 不含税
                 ,sds.subtotal_price - sds.coupon - sds.tax_price - sdst.taget_amount as target_diff	-- 目標差分
