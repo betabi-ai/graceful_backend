@@ -163,17 +163,28 @@ def get_jancode_sale_data_list(
     tags=["sale_datas"],
 )
 def get_shop_sales_data_list(request, delivery_date: str):
+
     sql_query = """
-                select gs.shopname, 
-                gs.shop_code,
-                sum(os.subtotal_price) as amount_price, 
-                count(os.order_number) as order_count
-                from
-                graceful_shops gs 
-                left join  orders  os  
-                    on gs.shop_code = os.shop_code and os.phase_name = '完了' and os.cancel_flag = 0 and  os.delivery_date = %s
-                group by gs.shopname, gs.shop_code
-                order by gs.shop_code
+                SELECT 
+                    gs.shopname, 
+                    gs.shop_code,
+                    SUM(os.subtotal_price - os.coupon) AS amount_price, 
+                    COUNT(os.order_number) AS order_count
+                FROM 
+                    graceful_shops gs 
+                LEFT JOIN 
+                    orders os  
+                ON 
+                    gs.shop_code = os.shop_code 
+                    AND os.cancel_flag <> 2 
+                    AND os.detail_downloaded = TRUE 
+                    AND TO_CHAR(os.order_date, 'YYYY-MM-DD') = %s
+                GROUP BY 
+                    gs.shopname, 
+                    gs.shop_code
+                ORDER BY 
+                    gs.shop_code;
+
             """
     # 执行查询
     with connection.cursor() as cursor:
@@ -196,41 +207,71 @@ def get_shop_saledatas(
 ):
     if dtype == "day":
         sql_query = """      
-            select gs.shop_code,
-            gs.shopname,
-            os.delivery_date,
-            sum(odc.amount_price) as amount_price,
-            count(distinct os.order_number) as order_count,
-            sum(odc.tax_price) as tax_price,
-            sum(odc.coupon) as coupon,
-            sum(odc.rewards) as rewards
-            from 
-            graceful_shops gs 
-            left join orders os on gs.shop_code = os.shop_code  and os.delivery_date between %s and %s 
-            and os.phase_name = '完了' and os.cancel_flag = 0   and detail_downloaded=true
-            left join order_details_calc odc on odc.order_number = os.order_number
-            where  os.shop_code = %s
-            group by gs.shop_code,gs.shopname,os.delivery_date
-            order by os.delivery_date desc
+            SELECT 
+                gs.shop_code,
+                gs.shopname,
+                os.delivery_date,
+                SUM(odc.amount_price - odc.coupon) AS amount_price,
+                COUNT(DISTINCT os.order_number) AS order_count,
+                SUM(odc.tax_price) AS tax_price,
+                SUM(odc.coupon) AS coupon,
+                SUM(odc.rewards) AS rewards
+            FROM 
+                graceful_shops gs 
+            LEFT JOIN 
+                orders os 
+            ON 
+                gs.shop_code = os.shop_code  
+                AND os.cancel_flag <> 2   
+                AND os.detail_downloaded = TRUE
+                AND os.delivery_date BETWEEN %s AND %s 
+            LEFT JOIN 
+                order_details_calc odc 
+            ON 
+                odc.order_number = os.order_number
+            WHERE 
+                os.shop_code = %s
+            GROUP BY 
+                gs.shop_code, 
+                gs.shopname, 
+                os.delivery_date
+            ORDER BY 
+                os.delivery_date DESC;
+
         """
     else:
         sql_query = """
-                select gs.shop_code,
-                gs.shopname, 
-                odc.order_month as delivery_date,
-                sum(odc.amount_price) as amount_price,
-                count(distinct os.order_number) as order_count,
-                sum(odc.tax_price) as tax_price,
-                sum(odc.coupon) as coupon,
-                sum(odc.rewards) as rewards
-                from 
-                graceful_shops gs 
-                left join orders os on gs.shop_code = os.shop_code
-                and os.phase_name = '完了' and os.cancel_flag = 0   and detail_downloaded = true
-                left join order_details_calc odc on odc.order_number = os.order_number
-                where  odc.order_month between  %s and %s  and  os.shop_code = %s  
-                group by gs.shop_code,gs.shopname ,odc.order_month
-                order by delivery_date desc
+                SELECT 
+                    gs.shop_code,
+                    gs.shopname, 
+                    odc.order_month AS delivery_date,
+                    SUM(odc.amount_price - odc.coupon) AS amount_price,
+                    COUNT(DISTINCT os.order_number) AS order_count,
+                    SUM(odc.tax_price) AS tax_price,
+                    SUM(odc.coupon) AS coupon,
+                    SUM(odc.rewards) AS rewards
+                FROM 
+                    graceful_shops gs 
+                LEFT JOIN 
+                    orders os 
+                ON 
+                    gs.shop_code = os.shop_code
+                    AND os.cancel_flag <> 2   
+                    AND os.detail_downloaded = TRUE
+                LEFT JOIN 
+                    order_details_calc odc 
+                ON 
+                    odc.order_number = os.order_number
+                WHERE 
+                    os.shop_code = %s 
+                    AND odc.order_month BETWEEN %s AND %s  
+                GROUP BY 
+                    gs.shop_code, 
+                    gs.shopname, 
+                    odc.order_month
+                ORDER BY 
+                    delivery_date DESC;
+
             """
 
     # 执行查询
