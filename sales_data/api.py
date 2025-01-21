@@ -686,65 +686,69 @@ def upsert_shop_daily_sales_tagets(request, data: ShopDailySalesTagetsSchema):
 def get_shop_daily_sales_summary(request, shopcode: str, start: str, end: str):
     sql_query = """
             SELECT 
-                sds.shop_code
-                ,sds.delivery_date 		-- 日にち 
-                ,EXTRACT(ISODOW FROM sds.delivery_date) AS weekday_number -- 星期数 1（Monday）到 7（Sunday）
-                ,sds.order_count -- 订单数
-                ,sdst.taget_amount		-- 目標(税別) 不含税
-                ,sds.subtotal_price - sds.coupon - sds.tax_price as amount_untax	--	売上(税別) 不含税
-                ,sds.subtotal_price - sds.coupon - sds.tax_price - sdst.taget_amount as target_diff	-- 目標差分
-                ,sds.subtotal_price - sds.coupon as amount_tax		-- 売上(税込)(含锐)
-                ,sds.coupon		-- 	クーポン額
-                ,ROUND(sds.coupon*100.0/sds.subtotal_price, 2) as soupon_rate --	クーポン率
-                ,sds.alf_amount -- アフィ売上
-                ,sds.afl_rewards	 -- アフィ売上
-                ,ROUND(sds.alf_amount * 100.0 / COALESCE((sds.subtotal_price - sds.coupon), 1), 2) as afl_rewards_rate -- アフィ売上 比率 
-                -- ,	-- 広告売上
-                ,sds.rpp_amount	-- RPP
-                ,ROUND(sds.rpp_amount * 100.0 / (sds.subtotal_price - sds.coupon), 2) as rpp_rate -- RPP 比率
-                ,sds.ca_amount	-- CA
-                ,sds.arrt_gms -- おス(店舗)
-                ,sds.cpa_sales -- CPA
-                ,sds.gmscd		-- 純広
-                ,sds.rsis_order_count	-- 件数
-                ,sds.rsis_sales_repeater_purchaser	-- リピーター 
-                ,sds.rsis_sales_visit	-- アクセス
-                ,sds.rpp_totalclick	-- RPP
-                ,sds.ca_coupon	-- CA
-                ,sds.arrt_clickcount	-- おス(店舗)
-                ,sds.aprd_click	-- 純広 クリック数
-                ,sds.rsis_sales_cvr	--  転換率(売上指標)
-                ,sds.rsis_sales_aov	-- 客単価
-                ,ROUND(sds.rpp_totaladcost * (100.0 - COALESCE(rdis.discount_rate, 0))/ 100.0, 0) as rpp_totaladcost	-- RPP(税抜) [実績額(合計)] 
-                ,sds.ca_adfee	-- CA(税抜) 
-                ,sds.arrt_chargefee	-- おス(店舗)(税抜)
-                ,sds.aprd_dailyadsales	-- 純広(税抜)
-                ,sds.cpa_fees	-- CPA(税抜)
-                ,sds.rsis_deal_sales_value	-- DEAL(税抜)
-                ,sds.original_price	-- 原価(税抜)
-                ,sds.pointsawarded	-- ポイント
-                ,sds.afl_rewards	-- アフィリ報酬
-                ,sds.shipping_cost	-- 送料
-                ,sds.envelope_cost	-- 資材費
-                ,ROUND(COALESCE(sds.coupon_count - sds.ca_usecount, 0) * 50 , 0) as rpp_coupon_fee    -- クーポン発行手数料 
-                ,COALESCE(rdis.discount_rate, 0) AS discount_rate	-- rpp 折扣率
-                ,ROUND(
-                        CAST(COALESCE(sff.fee_amount, 0) / 
-                        DATE_PART('days', DATE_TRUNC('month', sds.delivery_date) + INTERVAL '1 month' - INTERVAL '1 day') AS numeric), 
-                        0
-                    ) AS fixed_fees -- 固定费用 (按月平摊)
-                FROM 
-                    sales_daily_summary sds
-                LEFT JOIN shop_daily_sales_tagets sdst on sds.shop_code = sdst.shop_code and sdst.effect_date = sds.delivery_date 
-                LEFT JOIN rpp_discount_infos rdis on rdis.shop_code = sds.shop_code and TO_CHAR(sds.delivery_date, 'YYYY-MM') = TO_CHAR(rdis.effect_month, 'YYYY-MM')
-                LEFT JOIN (
-                    -- 店铺 固定费用
-                    SELECT shop_code, effect_month, SUM(fee_amount) AS fee_amount
-                    FROM shop_fixed_fees
-                    GROUP BY shop_code, effect_month
-                ) AS sff ON sff.shop_code = sds.shop_code and TO_CHAR(sds.delivery_date, 'YYYY-MM') = TO_CHAR(sff.effect_month, 'YYYY-MM')
-                where sds.shop_code = %s and sds.delivery_date between %s and %s
-                order by sds.delivery_date desc
+                sds.shop_code,
+                sds.delivery_date,  -- 日にち 
+                EXTRACT(ISODOW FROM sds.delivery_date) AS weekday_number,  -- 星期数 1（Monday）到 7（Sunday）
+                sds.order_count,  -- 订单数
+                sdst.taget_amount,  -- 目標(税別) 不含税
+                sds.subtotal_price - sds.coupon - sds.tax_price AS amount_untax,  -- 売上(税別) 不含税
+                sds.subtotal_price - sds.coupon - sds.tax_price - sdst.taget_amount AS target_diff,  -- 目標差分
+                sds.subtotal_price - sds.coupon AS amount_tax,  -- 売上(税込)(含锐)
+                sds.coupon,  -- クーポン額
+                ROUND(sds.coupon * 100.0 / sds.subtotal_price, 2) AS soupon_rate,  -- クーポン率
+                sds.alf_amount,  -- アフィ売上
+                sds.afl_rewards,  -- アフィ売上
+                ROUND(sds.alf_amount * 100.0 / NULLIF((sds.subtotal_price - sds.coupon), 0), 2) AS afl_rewards_rate,  -- アフィ売上 比率
+                sds.rpp_amount,  -- RPP
+                ROUND(sds.rpp_amount * 100.0 / NULLIF((sds.subtotal_price - sds.coupon), 0), 2) AS rpp_rate,  -- RPP 比率
+                sds.ca_amount,  -- CA
+                sds.arrt_gms,  -- おス(店舗)
+                sds.cpa_sales,  -- CPA
+                sds.gmscd,  -- 純広
+                sds.rsis_order_count,  -- 件数
+                sds.rsis_sales_repeater_purchaser,  -- リピーター
+                sds.rsis_sales_visit,  -- アクセス
+                sds.rpp_totalclick,  -- RPP
+                sds.ca_coupon,  -- CA
+                sds.arrt_clickcount,  -- おス(店舗)
+                sds.aprd_click,  -- 純広 クリック数
+                sds.rsis_sales_cvr,  -- 転換率(売上指標)
+                sds.rsis_sales_aov,  -- 客単価
+                ROUND(sds.rpp_totaladcost * (100.0 - COALESCE(rdis.discount_rate, 0)) / 100.0, 0) AS rpp_totaladcost,  -- RPP(税抜) [実績額(合計)]
+                sds.ca_adfee,  -- CA(税抜)
+                sds.arrt_chargefee,  -- おス(店舗)(税抜)
+                sds.aprd_dailyadsales,  -- 純広(税抜)
+                sds.cpa_fees,  -- CPA(税抜)
+                sds.rsis_deal_sales_value,  -- DEAL(税抜)
+                sds.original_price,  -- 原価(税抜)
+                sds.pointsawarded,  -- ポイント
+                sds.shipping_cost,  -- 送料
+                sds.envelope_cost,  -- 資材費
+                ROUND(COALESCE(sds.coupon_count - sds.ca_usecount, 0) * 50, 0) AS rpp_coupon_fee,  -- クーポン発行手数料
+                COALESCE(rdis.discount_rate, 0) AS discount_rate,  -- rpp 折扣率
+                ROUND(
+                    CAST(COALESCE(sff.fee_amount, 0) / 
+                        NULLIF(DATE_PART('days', DATE_TRUNC('month', sds.delivery_date) + INTERVAL '1 month' - INTERVAL '1 day'), 0) 
+                    AS numeric), 
+                    0
+                ) AS fixed_fees  -- 固定费用 (按月平摊)
+            FROM 
+                sales_daily_summary sds
+            LEFT JOIN 
+                shop_daily_sales_tagets sdst ON sds.shop_code = sdst.shop_code AND sdst.effect_date = sds.delivery_date
+            LEFT JOIN 
+                rpp_discount_infos rdis ON rdis.shop_code = sds.shop_code AND sds.delivery_date >= rdis.effect_month AND sds.delivery_date < rdis.effect_month + INTERVAL '1 month'
+            LEFT JOIN (
+                -- 店铺 固定费用
+                SELECT shop_code, effect_month, SUM(fee_amount) AS fee_amount
+                FROM shop_fixed_fees
+                GROUP BY shop_code, effect_month
+            ) AS sff ON sff.shop_code = sds.shop_code AND TO_CHAR(sds.delivery_date, 'YYYY-MM') = TO_CHAR(sff.effect_month, 'YYYY-MM')
+            WHERE 
+                sds.shop_code = %s
+                AND sds.delivery_date BETWEEN %s AND %s
+            ORDER BY 
+                sds.delivery_date DESC;
         """
 
     # 执行查询
