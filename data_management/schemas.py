@@ -127,6 +127,7 @@ class RPPDiscountInfosInputSchema(Schema):
     id: Optional[int] = None
     shopid: str
     shop_name: str
+    shop_code: str
     effect_month: date
     discount_rate: float
 

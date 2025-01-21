@@ -738,6 +738,7 @@ class RppDiscountInfos(models.Model):
     id = models.BigAutoField(primary_key=True)
     shopid = models.CharField(max_length=20)
     shop_name = models.CharField(max_length=50)
+    shop_code = models.CharField(max_length=10)
     effect_month = models.DateField()
     discount_rate = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
