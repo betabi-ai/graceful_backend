@@ -763,24 +763,13 @@ def get_shop_daily_sales_summary(request, shopcode: str, start: str, end: str):
                 sds.ad_total_fees,  -- 广告销售总费用(不含税)
                 sds.commision_total_fees,  -- 佣金总费用(不含税)
                 sds.marginal_profit,  -- 利润
-                ROUND(
-                    CAST(COALESCE(sff.fee_amount, 0) / 
-                        NULLIF(DATE_PART('days', DATE_TRUNC('month', sds.delivery_date) + INTERVAL '1 month' - INTERVAL '1 day'), 0) 
-                    AS numeric), 
-                    0
-                ) AS fixed_fees  -- 固定费用 (按月平摊)
+                sds.fixed_fees  -- 固定费用 (按月平摊)
             FROM 
                 sales_daily_summary sds
             LEFT JOIN 
                 shop_daily_sales_tagets sdst ON sds.shop_code = sdst.shop_code AND sdst.effect_date = sds.delivery_date
             LEFT JOIN 
                 rpp_discount_infos rdis ON rdis.shop_code = sds.shop_code AND sds.delivery_date >= rdis.effect_month AND sds.delivery_date < rdis.effect_month + INTERVAL '1 month'
-            LEFT JOIN (
-                -- 店铺 固定费用
-                SELECT shop_code, effect_month, SUM(fee_amount) AS fee_amount
-                FROM shop_fixed_fees
-                GROUP BY shop_code, effect_month
-            ) AS sff ON sff.shop_code = sds.shop_code AND TO_CHAR(sds.delivery_date, 'YYYY-MM') = TO_CHAR(sff.effect_month, 'YYYY-MM')
             WHERE 
                 sds.shop_code = %s
                 AND sds.delivery_date BETWEEN %s AND %s
