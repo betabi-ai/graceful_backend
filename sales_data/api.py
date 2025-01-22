@@ -23,6 +23,7 @@ from shares.models import (
 )
 from shares.schemas import ShopDailySalesTagetsSchema
 from shares.time_utils import get_previous_months_first_day
+from shares.tools import get_result_with_sql
 
 router = Router(auth=JWTAuth())
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
@@ -778,16 +779,85 @@ def get_shop_daily_sales_summary(request, shopcode: str, start: str, end: str):
         """
 
     # 执行查询
-    with connection.cursor() as cursor:
+    result = get_result_with_sql(sql_query, [shopcode, start, end])
+    return result
 
-        cursor.execute(sql_query, [shopcode, start, end])
-        columns = [col[0] for col in cursor.description]
-        rows = cursor.fetchall()
-        results = [dict(zip(columns, row)) for row in rows]
 
-        return results
+# 获取指定店铺指定月份的销售数据
+@router.get(
+    "/shop/monthsales",
+    response=List[Any],
+    tags=["sale_datas"],
+)
+def get_shop_month_sales_data(request, start: str, end: str, shopcode: str = ""):
+    """
+    当 shopcode 为空时,返回所有店铺的销售数据，但只返回指定 月份 日期范围内的销售数据
+    """
+    # 构造查询条件
+    where_clauses = []
+    params = []
 
-    return []
+    if shopcode and shopcode != "" and shopcode != "all":
+        where_clauses.append(" sds.shop_code = %s  ")
+        params.append(shopcode)
+
+    where_clauses.append(" sds.delivery_date >= %s and sds.delivery_date < %s ")
+    params.append(start)
+    params.append(end)
+
+    # 构造完整 SQL 查询
+    where_str = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+
+    sql = f"""
+            WITH month_sales_target AS (
+                SELECT 
+                    shop_code
+                    ,TO_CHAR(effect_date, 'YYYY-MM-01') as effect_date
+                    ,SUM(taget_amount) as taget_amount 
+                FROM 
+                    shop_daily_sales_tagets
+                GROUP BY shop_code, TO_CHAR(effect_date, 'YYYY-MM-01')
+            )
+            SELECT 
+                sds.shop_code
+                ,TO_CHAR(sds.delivery_date, 'YYYY-MM-01') AS effect_month 
+                ,COALESCE(sdst.taget_amount, 0) AS  taget_amount -- 目標(税別) 不含税 
+                ,SUM(sds.subtotal_price - sds.coupon ) AS amount_tax -- 売上（税込）
+                ,SUM(sds.subtotal_price - sds.coupon - sds.tax_price) AS amount_untax -- 売上（税別）
+                ,SUM(sds.order_count) AS order_count -- 订单件数
+                ,SUM(sds.coupon) AS coupon -- クーポン
+                ,ROUND(SUM((COALESCE(sds.coupon_count,0) - COALESCE(sds.ca_usecount,0))) * 50 * 1.1, 0) AS rpp_coupon_fee	-- クーポン発行手数料
+                ,SUM(sds.original_price) AS original_price -- 原価
+                ,ROUND(SUM(sds.subtotal_price - sds.coupon ) * 0.035 * 1.1, 0) AS system_usage_fee -- システム利用料 ?
+                ,SUM(sds.pointsawarded) AS pointsawarded	-- ポイント付与
+                ,ROUND(SUM(sds.afl_rewards) * 1.3, 0) AS afl_rewards -- アフィリエイト諸費用
+                ,ROUND(SUM(sds.subtotal_price - sds.coupon ) * 0.035 * 1.1, 0) AS payment_fee -- 決済手数料
+                ,ROUND(SUM(sds.rpp_totaladcost) * 1.1, 0) AS rpp_totaladcost -- RPP値引き前 
+                ,ROUND(SUM(sds.rpp_totaladcost * COALESCE(rdis.discount_rate, 0) ) * 1.1 / 100.0, 0) AS discount_rpp_totaladcost --RPP値引き
+                ,ROUND(SUM(sds.aprd_dailyadsales) * 1.1, 0) AS aprd_dailyadsales	-- 純広(税込)
+                ,ROUND(SUM(sds.ca_adfee) * 1.1, 0) AS ca_adfee	-- CA
+                ,ROUND(SUM(sds.cpa_fees) * 1.1, 0) AS cpa_fees	-- CPA
+                ,ROUND(SUM(sds.rsis_deal_sales_value) * 1.1,0) AS rsis_deal_sales_value -- DEAL
+                ,ROUND(SUM(sds.arrt_chargefee) * 1.1, 0) AS arrt_chargefee -- おニュー
+                ,SUM(sds.shipping_cost+envelope_cost) AS shpping_fees -- 物流コスト
+                ,SUM(sds.marginal_profit) AS marginal_profit -- 限界利益
+                ,SUM(sds.fixed_fees) AS fixed_fees -- 固定費
+            FROM 
+                sales_daily_summary AS sds
+            LEFT JOIN 
+                rpp_discount_infos rdis 
+                ON rdis.shop_code = sds.shop_code AND TO_CHAR(sds.delivery_date, 'YYYY-MM-01') =  TO_CHAR(rdis.effect_month, 'YYYY-MM-01')
+            LEFT JOIN 
+                month_sales_target sdst 
+                ON sds.shop_code = sdst.shop_code AND sdst.effect_date = TO_CHAR(sds.delivery_date, 'YYYY-MM-01')
+            {where_str}
+            GROUP BY sds.shop_code,TO_CHAR(sds.delivery_date, 'YYYY-MM-01'),sdst.taget_amount
+            ORDER BY effect_month desc, shop_code asc
+        """
+
+    result = get_result_with_sql(sql, params)
+
+    return result
 
 
 # ================================== shop_fixed_fees ============================================
