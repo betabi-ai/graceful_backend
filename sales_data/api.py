@@ -166,25 +166,16 @@ def get_shop_sales_data_list(request, delivery_date: str):
 
     sql_query = """
                 SELECT 
-                    gs.shopname, 
-                    gs.shop_code,
-                    SUM(os.subtotal_price - os.coupon) AS amount_price, 
-                    COUNT(os.order_number) AS order_count
+                    gs.shopname
+                    ,gs.shop_code
+                    ,sds.subtotal_price - sds.coupon AS amount_price
+                    ,sds.order_count 
                 FROM 
-                    graceful_shops gs 
-                LEFT JOIN 
-                    orders os  
-                ON 
-                    gs.shop_code = os.shop_code 
-                    AND os.cancel_flag <> 2 
-                    AND os.detail_downloaded = TRUE 
-                    AND TO_CHAR(os.order_date, 'YYYY-MM-DD') = %s
-                GROUP BY 
-                    gs.shopname, 
-                    gs.shop_code
+                    graceful_shops gs
+                LEFT JOIN
+                    sales_daily_summary sds on gs.shop_code = sds.shop_code and sds.delivery_date = %s
                 ORDER BY 
                     gs.shop_code;
-
             """
     # 执行查询
     with connection.cursor() as cursor:
@@ -263,8 +254,8 @@ def get_shop_saledatas(
                 ON 
                     odc.order_number = os.order_number
                 WHERE 
-                    os.shop_code = %s 
-                    AND odc.order_month BETWEEN %s AND %s  
+                    odc.order_month BETWEEN %s AND %s  
+                    AND os.shop_code = %s 
                 GROUP BY 
                     gs.shop_code, 
                     gs.shopname, 
