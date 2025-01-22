@@ -758,6 +758,11 @@ def get_shop_daily_sales_summary(request, shopcode: str, start: str, end: str):
                 sds.envelope_cost,  -- 資材費
                 ROUND(COALESCE(sds.coupon_count - sds.ca_usecount, 0) * 50, 0) AS rpp_coupon_fee,  -- クーポン発行手数料
                 COALESCE(rdis.discount_rate, 0) AS discount_rate,  -- rpp 折扣率
+                sds.ad_total_amount,  -- 广告销售总额
+                sds.ad_total_visit,  -- 广告总访问量
+                sds.ad_total_fees,  -- 广告销售总费用(不含税)
+                sds.commision_total_fees,  -- 佣金总费用(不含税)
+                sds.marginal_profit,  -- 利润
                 ROUND(
                     CAST(COALESCE(sff.fee_amount, 0) / 
                         NULLIF(DATE_PART('days', DATE_TRUNC('month', sds.delivery_date) + INTERVAL '1 month' - INTERVAL '1 day'), 0) 
