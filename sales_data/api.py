@@ -860,6 +860,30 @@ def get_shop_month_sales_data(request, start: str, end: str, shopcode: str = "")
     return result
 
 
+# 获取指定店铺的指定月份的 销售金额和订单数
+@router.get(
+    "/shop/monthsales/simple",
+    response=List[Any],
+    tags=["sale_datas"],
+)
+def get_shop_month_sales_amount_and_ordercount(
+    request, shopcode: str, start: str, end: str
+):
+    sql = """
+        SELECT 
+            TO_CHAR(delivery_date, 'YYYY-MM-01') as delivery_date
+            , sum(subtotal_price - coupon) as amount_tax
+            , sum(order_count) as order_count
+        FROM sales_daily_summary 
+        WHERE shop_code = %s and delivery_date >= %s and delivery_date < %s
+        GROUP BY TO_CHAR(delivery_date, 'YYYY-MM-01')
+        ORDER BY delivery_date
+    """
+
+    result = get_result_with_sql(sql, [shopcode, start, end])
+    return result
+
+
 # ================================== shop_fixed_fees ============================================
 
 
