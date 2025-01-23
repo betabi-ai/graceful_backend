@@ -1209,7 +1209,6 @@ def export_orders_data(request):
     "/graceful_shops",
     response=List[GracefulShopsSchema],
     tags=["datas_management"],
-    auth=None,
 )
 def get_graceful_shops(request, platform: int = None):
     if platform:
@@ -1217,6 +1216,15 @@ def get_graceful_shops(request, platform: int = None):
             "shop_platform", "shop_code"
         )
     return GracefulShops.objects.filter().order_by("shop_platform", "shop_code")
+
+
+@router.get(
+    "/graceful_shops/{shopcode}",
+    response=GracefulShopsSchema,
+    tags=["datas_management"],
+)
+def get_graceful_shop_info(request, shopcode: str):
+    return GracefulShops.objects.filter(shop_code=shopcode).first()
 
 
 # ========================== product_categories =================================
