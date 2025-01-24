@@ -859,7 +859,6 @@ class ShopDailySalesTagets(models.Model):
     taget_amount = models.DecimalField(
         max_digits=18, decimal_places=2, blank=True, null=True
     )
-    is_done = models.BooleanField(blank=True, null=True)
     updated_at = models.DateTimeField()
     updated_by = models.ForeignKey(
         User,

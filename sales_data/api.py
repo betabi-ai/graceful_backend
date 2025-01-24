@@ -585,13 +585,14 @@ def get_shop_daily_sales_tagets(request, shopcode: str, month: str):
 
     qs = (
         ShopDailySalesTagets.objects.filter(query)
-        .values("id", "taget_amount", "effect_date", "shop_code", "is_done")
+        .values("id", "taget_amount", "effect_date", "shop_code")
         .order_by("effect_date")
     )
 
     return qs
 
 
+# 上传 店铺的每日销售目标
 @router.post(
     "/dailysalestagets/upload/{str:shopcode}/{str:month}",
     response={200: Any, 422: Any},
@@ -604,7 +605,7 @@ def upload_daily_sales_tagets(
     file: UploadedFile = File(...),
 ):
     """
-    上传 报关信息 文件
+    上传 店铺的每日销售目标 文件
     """
     try:
 
@@ -660,7 +661,6 @@ def upload_daily_sales_tagets(
                         shop_code=shopcode,
                         effect_date=effect_date,
                         taget_amount=taget_amount,
-                        is_done=False,
                         updated_by=user,
                     )
                 )
@@ -672,7 +672,6 @@ def upload_daily_sales_tagets(
                         shop_code=shopcode,
                         effect_date=effect_date,
                         taget_amount=taget_amount,
-                        is_done=False,
                     )
                 )
 
