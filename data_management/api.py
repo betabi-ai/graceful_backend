@@ -1185,6 +1185,17 @@ def upsert_rpp_discount_infos(request, data: RPPDiscountInfosInputSchema):
     return new_rrpDiscountInfo
 
 
+@router.delete(
+    "/rpp_discount_infos/delete",
+    response=Any,
+    tags=["datas_management"],
+)
+def delete_rpp_discount_infos(request, id: int):
+    RppDiscountInfos.objects.filter(id=id).delete()
+
+    return {"message": "删除成功"}
+
+
 # ========================== export_orders_data =================================
 # 导出订单数据，并上传到google driver上
 @router.get(
