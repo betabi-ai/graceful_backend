@@ -1103,7 +1103,7 @@ def get_itemcode_itemmanagecode_mapping(request, q: str = "", sort: str = "item_
 
     qs = (
         ItemcodeItemmanagecodeMapping.objects.filter(query)
-        .values("item_code", "manage_code", "id")
+        .values("item_code", "manage_code", "id", "shop_name", "shop_code", "shopid")
         .order_by(sort)
     )
 

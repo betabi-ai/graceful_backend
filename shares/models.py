@@ -718,6 +718,9 @@ class OrderDetailsCalc(models.Model):
 # 商品管理番号（商品URL）与 商品番号 的对应关系 model
 class ItemcodeItemmanagecodeMapping(models.Model):
     id = models.BigAutoField(primary_key=True)
+    shopid = models.CharField(max_length=20)
+    shop_name = models.CharField(max_length=50, blank=True, null=True)
+    shop_code = models.CharField(max_length=20, blank=True, null=True)
     item_code = models.CharField(max_length=50)
     manage_code = models.CharField(max_length=50)
     updated_at = models.DateTimeField()
