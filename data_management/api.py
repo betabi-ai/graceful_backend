@@ -1095,16 +1095,20 @@ def upload_jancode_parent_child_mapping_file(request, file: UploadedFile = File(
     tags=["datas_management"],
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
-def get_itemcode_itemmanagecode_mapping(request, q: str = "", sort: str = "item_code"):
+def get_itemcode_itemmanagecode_mapping(
+    request, q: str = "", sort: str = "shop_name,item_code", shop_id: str = "all"
+):
 
     query = Q()
     if q:
         query &= Q(item_code__icontains=q) | Q(manage_code__icontains=q)
+    if shop_id and shop_id != "all":
+        query &= Q(shopid=shop_id)
 
     qs = (
         ItemcodeItemmanagecodeMapping.objects.filter(query)
         .values("item_code", "manage_code", "id", "shop_name", "shop_code", "shopid")
-        .order_by(sort)
+        .order_by(*sort.split(","))
     )
 
     return qs
