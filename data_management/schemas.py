@@ -121,6 +121,9 @@ class ItemcodeItemmanagecodeMappingSchema(Schema):
     id: Optional[int] = None
     item_code: str
     manage_code: str
+    shop_name: str
+    shop_code: str
+    shopid: str
 
 
 class RPPDiscountInfosInputSchema(Schema):
