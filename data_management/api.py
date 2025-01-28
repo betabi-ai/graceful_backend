@@ -18,6 +18,7 @@ from openpyxl.styles import Alignment, Font
 
 from cpc.tasks import handle_spider
 from data_management.constant import (
+    ITEMCODE_ITEMMANAGECOD_EMAPPING,
     PRODUCT_DEFAULT_VALUES,
     PRODUCT_UPLOAD_FIELDNAME_MAPPING,
     PURCHASE_CUSTOM_UPLOAD_DEFAULT_VALUE,
@@ -54,6 +55,7 @@ from shares.models import (
     PurchaseInfos,
     RppDiscountInfos,
 )
+from shares.tools import detect_file_encoding
 
 router = Router(auth=JWTAuth())
 _PAGE_SIZE = getattr(settings, "PAGE_SIZE", 30)
@@ -1032,6 +1034,7 @@ def upload_jancode_parent_child_mapping_file(request, file: UploadedFile = File(
     上传 parent_code 的子 code 映射关系文件
     """
     try:
+
         # 读取并解码文件内容
         file_content = file.read().decode("utf-8")
         csv_reader = csv.DictReader(StringIO(file_content))
@@ -1089,6 +1092,7 @@ def upload_jancode_parent_child_mapping_file(request, file: UploadedFile = File(
 # =========================== itemcode_itemmanagecode_mapping =================================
 
 
+# 获取 itemcode_itemmanagecode_mapping 列表
 @router.get(
     "/itemcode/itemmanagecode",
     response=List[Any],
@@ -1096,7 +1100,7 @@ def upload_jancode_parent_child_mapping_file(request, file: UploadedFile = File(
 )
 @paginate(PageNumberPagination, page_size=_PAGE_SIZE)
 def get_itemcode_itemmanagecode_mapping(
-    request, q: str = "", sort: str = "shop_name,item_code", shop_id: str = "all"
+    request, q: str = "", shop_id: str = "all", sort: str = "shop_name,item_code"
 ):
 
     query = Q()
@@ -1114,6 +1118,7 @@ def get_itemcode_itemmanagecode_mapping(
     return qs
 
 
+# 新增
 @router.post(
     "/itemcode/itemmanagecode/upsert",
     response={200: ItemcodeItemmanagecodeMappingSchema, 422: Any},
@@ -1141,6 +1146,97 @@ def upsert_itemcode_itemmanagecode_mapping(
     )
 
     return new_itemcode_itemmanagecode_mapping
+
+
+# 上传对应关系文件 csv 格式
+@router.post(
+    "/itemcode/itemmanagecode/upload/{str:shopid}",
+    response={200: Any, 422: Any},
+    tags=["datas_management"],
+)
+def upload_itemmanagecode_mapping(request, shopid: str, file: UploadedFile = File(...)):
+    """
+    上传 商品数据 文件
+    """
+
+    try:
+
+        # 获取店铺信息
+        shop = GracefulShops.objects.filter(shopid=shopid).first()
+        if not shop:
+            return 422, {"message": "店铺不存在！"}
+
+        # 检测文件编码
+        encoding = detect_file_encoding(file)
+        # 读取并解码文件内容
+        file_content = file.read().decode(encoding)
+        csv_reader = csv.DictReader(StringIO(file_content))
+
+        # 替换字段名
+        csv_reader.fieldnames = [
+            ITEMCODE_ITEMMANAGECOD_EMAPPING.get(field, field)
+            for field in csv_reader.fieldnames
+        ]
+
+        # print("=== fieldnames:", csv_reader.fieldnames)
+
+        # 检查文件是否包含必要字段
+        required_fields = {"manage_code", "item_code"}
+        if not required_fields.issubset(csv_reader.fieldnames):
+            missing_fields = required_fields - set(csv_reader.fieldnames or [])
+            return 422, {"message": f"缺少必要字段: {', '.join(missing_fields)}"}
+
+        # print("...........")
+
+        # 解析并处理数据
+        user = request.user
+
+        # 库里已经存在的数据
+        has_datas = ItemcodeItemmanagecodeMapping.objects.filter(shopid=shopid).values(
+            "item_code", "manage_code"
+        )
+
+        has_datas = {item["manage_code"]: item["item_code"] for item in has_datas}
+
+        datas = []
+        for row in csv_reader:
+
+            # 去除空行
+            if not any(row.values()):
+                continue
+
+            manage_code = row["manage_code"]
+            item_code = row["item_code"]
+            if not manage_code or not item_code:
+                continue
+
+            if manage_code in has_datas:
+                continue
+
+            itemcode_itemmanagecode_mapping = ItemcodeItemmanagecodeMapping(
+                shopid=shopid,
+                shop_name=shop.shopname,
+                shop_code=shop.shop_code,
+                manage_code=manage_code,
+                item_code=item_code,
+            )
+            if user:
+                itemcode_itemmanagecode_mapping.updated_by = user
+
+            datas.append(itemcode_itemmanagecode_mapping)
+
+        # print("=== datas:", datas)
+        ItemcodeItemmanagecodeMapping.objects.bulk_create(datas)
+
+        return 200, {"message": f"上传成功！！！"}
+
+    except UnicodeDecodeError as e:
+        print(e)
+        return 422, {"message": "文件解码失败，请确保文件是 UTF-8 编码"}
+    except Exception as e:
+        return 422, {"message": f"处理文件时发生错误: {str(e)}"}
+
+    return 200, {"message": "上传成功！"}
 
 
 # ========================== rpp_discount_infos =================================

@@ -126,3 +126,10 @@ PURCHASE_CUSTOM_UPLOAD_DEFAULT_VALUE = {
     "bare_log": "",
     "logo": "",
 }
+
+
+# 商品番号和管理番号对应关系
+ITEMCODE_ITEMMANAGECOD_EMAPPING = {
+    "商品管理番号（商品URL）": "manage_code",
+    "商品番号": "item_code",
+}
