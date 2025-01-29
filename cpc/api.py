@@ -61,9 +61,10 @@ def get_cpc_products(request, shopid: int, q: str = None):
     获取指定shopid的CPC商品
     如果有查询参数q，则根据商品管理ID或商品名称进行模糊查询
     """
+    # print("======shopid:", shopid, q)
     query = Q(shopid=shopid)
     if q:
-        query &= Q(itemmngid__icontains=q) | Q(itemname__icontains=q)
+        query &= Q(itemmngid__icontains=q)
     qs = CpcKeywordsGoods.objects.filter(query).order_by("itemmngid")
     # print(qs.query)
     return qs
